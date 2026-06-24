@@ -1,0 +1,1918 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>공문 관리 시스템</title>
+    <!-- Tailwind CSS 사용 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons 사용 -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;900&display=swap');
+        
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background-color: #f8fafc;
+        }
+
+        /* A4 규격 엄격 맞춤 디자인 (210mm x 297mm) */
+        @page {
+            size: A4;
+            margin: 0;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-area, #print-area * {
+                visibility: visible;
+            }
+            #print-area {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 210mm;
+                height: 297mm;
+                padding-left: 20mm;
+                padding-right: 20mm;
+                padding-top: 25mm;
+                padding-bottom: 25mm;
+                background: white;
+                box-shadow: none;
+                box-sizing: border-box;
+                page-break-inside: avoid;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+
+        /* 화면 프리뷰 전용 A4 컨테이너 비율 보정 */
+        .preview-a4 {
+            width: 210mm;
+            height: 297mm;
+            padding-left: 20mm;
+            padding-right: 20mm;
+            padding-top: 25mm;
+            padding-bottom: 25mm;
+            background: white;
+            box-sizing: border-box;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+</head>
+<body class="h-screen flex overflow-hidden text-gray-800">
+
+    <!-- 보안인증 세션 로그인 오버레이 -->
+    <div id="login-overlay" class="fixed inset-0 bg-[#0f172a] z-50 flex items-center justify-center transition-all duration-500">
+        <div class="bg-white p-8 rounded-2xl w-96 shadow-2xl space-y-6 border border-gray-100">
+            <div class="text-center space-y-2">
+                <div class="mx-auto w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center text-white shadow-lg">
+                    <i data-lucide="shield-check" class="w-6 h-6"></i>
+                </div>
+                <h2 class="text-xl font-bold text-gray-900">공문 관리 시스템</h2>
+                <p class="text-xs text-gray-400">보안 인증 로그인</p>
+            </div>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">사용자 아이디</label>
+                    <div class="relative">
+                        <input type="text" id="login-id" value="admin" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                        <i data-lucide="user" class="w-4 h-4 text-gray-400 absolute left-3 top-3"></i>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-500 mb-1">비밀번호</label>
+                    <div class="relative">
+                        <input type="password" id="login-pw" value="admin" class="w-full pl-9 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                        <i data-lucide="lock" class="w-4 h-4 text-gray-400 absolute left-3 top-3"></i>
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 bg-blue-50 rounded-lg border border-blue-100 text-[11px] text-blue-700 leading-relaxed">
+                <p class="font-bold">💡 데모 접속 계정 정보</p>
+                <p>ID: <span class="font-semibold">admin</span> / PW: <span class="font-semibold">admin</span></p>
+            </div>
+            <button onclick="handleLogin()" class="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-lg transition-colors shadow-md flex items-center justify-center gap-2">
+                <i data-lucide="log-in" class="w-4 h-4"></i> 접속 인증하기
+            </button>
+        </div>
+    </div>
+
+    <!-- 좌측 사이드바 -->
+    <aside class="w-64 bg-[#1e2d4a] text-gray-300 flex flex-col justify-between flex-shrink-0 no-print">
+        <div>
+            <!-- 로고 영역 -->
+            <div class="h-16 flex items-center px-6 border-b border-[#2b3c5d]">
+                <div class="flex items-center gap-3">
+                    <div class="bg-blue-600 p-1.5 rounded text-white flex items-center justify-center">
+                        <i data-lucide="file-text" class="w-5 h-5"></i>
+                    </div>
+                    <span class="text-white font-bold text-lg tracking-wide">공문 관리 시스템</span>
+                </div>
+            </div>
+            <!-- 메뉴 목록 -->
+            <nav class="mt-6 px-4 space-y-1">
+                <button onclick="switchTab('dashboard')" id="menu-dashboard" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors bg-[#2b3c5d] text-white">
+                    <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+                    대시보드
+                </button>
+                <button onclick="switchTab('list')" id="menu-list" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-[#2b3c5d] hover:text-white text-gray-400">
+                    <i data-lucide="list-todo" class="w-5 h-5"></i>
+                    공문 목록
+                </button>
+                <button onclick="switchTab('create')" id="menu-create" class="w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors hover:bg-[#2b3c5d] hover:text-white text-gray-400">
+                    <i data-lucide="file-plus" class="w-5 h-5"></i>
+                    공문 작성 / 편집
+                </button>
+            </nav>
+        </div>
+
+        <!-- 하단 설정 및 관리자 제어 -->
+        <div class="p-4 border-t border-[#2b3c5d] space-y-2">
+            <button onclick="switchTab('settings')" id="menu-settings" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-semibold text-gray-400 hover:bg-[#2b3c5d] hover:text-white transition-colors">
+                <i data-lucide="sliders-horizontal" class="w-4 h-4"></i>
+                시스템 설정
+            </button>
+            <button onclick="triggerLogout()" class="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-xs font-semibold text-red-400 hover:bg-red-950/40 hover:text-red-300 transition-colors">
+                <i data-lucide="log-out" class="w-4 h-4"></i>
+                시스템 로그아웃
+            </button>
+            <div class="flex items-center gap-3 px-2 pt-2 border-t border-[#2b3c5d]/40">
+                <div class="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-white text-xs font-bold">
+                    AD
+                </div>
+                <div>
+                    <p class="text-xs font-semibold text-white" id="session-user">관리자 계정</p>
+                    <p class="text-[10px] text-gray-400">admin@hoban.co.kr</p>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <!-- 메인 컨텐츠 영역 -->
+    <main class="flex-1 flex flex-col min-w-0 overflow-hidden bg-[#f1f5f9]">
+        <!-- 상단 헤더 -->
+        <header class="h-16 bg-white border-b border-gray-200 flex items-center justify-between px-8 flex-shrink-0 no-print">
+            <div class="flex items-center gap-2">
+                <h1 class="text-xl font-bold text-gray-800" id="page-title">대시보드</h1>
+                <span class="text-sm text-gray-400">| 실시간 공문 관리 현황</span>
+            </div>
+            <div class="flex items-center gap-3">
+                <div class="text-xs text-gray-500 font-medium bg-gray-100 px-3 py-1.5 rounded-lg flex items-center gap-2" id="live-clock">
+                    <i data-lucide="clock" class="w-3.5 h-3.5"></i> Loading...
+                </div>
+            </div>
+        </header>
+
+        <!-- 세부 콘텐츠 뷰 영역 -->
+        <div class="flex-1 overflow-hidden relative">
+            
+            <!-- 1. 대시보드 뷰 -->
+            <div id="view-dashboard" class="absolute inset-0 overflow-y-auto p-8 space-y-6">
+                <!-- 통계 카드 세트 -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-400">총 공문 발행</p>
+                            <h3 class="text-3xl font-bold text-gray-800 mt-1" id="stat-total">0 건</h3>
+                        </div>
+                        <div class="p-3 bg-blue-50 text-blue-600 rounded-lg">
+                            <i data-lucide="layers" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-400">이번 달 발송</p>
+                            <h3 class="text-3xl font-bold text-blue-600 mt-1" id="stat-month">0 건</h3>
+                        </div>
+                        <div class="p-3 bg-green-50 text-green-600 rounded-lg">
+                            <i data-lucide="calendar" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-400">올해 누적 발송</p>
+                            <h3 class="text-3xl font-bold text-gray-800 mt-1" id="stat-year">0 건</h3>
+                        </div>
+                        <div class="p-3 bg-purple-50 text-purple-600 rounded-lg">
+                            <i data-lucide="trending-up" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex items-center justify-between">
+                        <div>
+                            <p class="text-sm font-semibold text-gray-400">등록된 발신기관</p>
+                            <h3 class="text-3xl font-bold text-gray-800 mt-1">1 개소</h3>
+                        </div>
+                        <div class="p-3 bg-orange-50 text-orange-600 rounded-lg">
+                            <i data-lucide="building-2" class="w-6 h-6"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 차트 및 최근 내역 그리드 -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- 월별 발송 현황 (SVG 막대 차트) -->
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm lg:col-span-1">
+                        <h4 class="text-sm font-bold text-gray-700 mb-4 flex items-center gap-2">
+                            <i data-lucide="bar-chart-2" class="text-blue-600 w-4 h-4"></i> 월별 발송 건수 (2026년)
+                        </h4>
+                        <div class="h-64 flex items-end justify-between px-4 pb-4 pt-8 border-b border-gray-200" id="chart-bars">
+                            <!-- JS 동적 로드 -->
+                        </div>
+                        <div class="flex justify-between px-4 pt-2 text-[10px] text-gray-400 font-mono">
+                            <span>1월</span><span>2월</span><span>3월</span><span>4월</span><span>5월</span><span>6월</span><span>7월</span>
+                        </div>
+                    </div>
+
+                    <!-- 최근 작성된 공문 목록 -->
+                    <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm lg:col-span-2">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                                <i data-lucide="clock" class="text-blue-600 w-4 h-4"></i> 최근 작성된 공문 (최신순 5건)
+                            </h4>
+                            <button onclick="switchTab('list')" class="text-xs text-blue-600 hover:underline font-semibold flex items-center gap-1">
+                                전체보기 <i data-lucide="chevron-right" class="w-3.5 h-3.5"></i>
+                            </button>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left text-sm">
+                                <thead>
+                                    <tr class="border-b border-gray-100 text-gray-400 font-semibold text-xs">
+                                        <th class="pb-3 pl-2">문서 번호</th>
+                                        <th class="pb-3">수신인</th>
+                                        <th class="pb-3">제목</th>
+                                        <th class="pb-3">시행일자</th>
+                                        <th class="pb-3 pr-2 text-right">작업</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="dashboard-recent-table" class="divide-y divide-gray-50 text-gray-700">
+                                    <!-- JS 동적 로드 -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 2. 공문 목록 조회 뷰 -->
+            <div id="view-list" class="absolute inset-0 overflow-y-auto p-8 space-y-6 hidden">
+                <!-- 검색 필터바 카드 -->
+                <div class="bg-white p-6 rounded-xl border border-gray-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-gray-600">연도 검색:</span>
+                        <div class="flex bg-gray-100 rounded-lg p-1" id="year-filter-buttons">
+                            <button onclick="setYearFilter('all')" id="btn-filter-all" class="px-4 py-1.5 rounded-md text-xs font-bold transition-all bg-white text-blue-600 shadow-sm">전체</button>
+                            <button onclick="setYearFilter('2026')" id="btn-filter-2026" class="px-4 py-1.5 rounded-md text-xs font-bold transition-all text-gray-500 hover:text-gray-800">2026년</button>
+                            <button onclick="setYearFilter('2025')" id="btn-filter-2025" class="px-4 py-1.5 rounded-md text-xs font-bold transition-all text-gray-500 hover:text-gray-800">2025년</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="relative w-80">
+                            <input type="text" id="search-keyword" oninput="applyFilters()" placeholder="제목, 문서번호, 수신처 검색..." class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:border-blue-500">
+                            <i data-lucide="search" class="w-4 h-4 text-gray-400 absolute left-3 top-3"></i>
+                        </div>
+                        <button onclick="switchTab('create')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-bold transition-colors flex items-center gap-2 shadow-sm">
+                            <i data-lucide="plus" class="w-4 h-4"></i> 신규 작성
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 메인 리스트 테이블 -->
+                <div class="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div class="p-6 border-b border-gray-100 flex justify-between items-center">
+                        <h4 class="text-sm font-bold text-gray-700 flex items-center gap-2">
+                            <i data-lucide="file-text" class="text-blue-600 w-4 h-4"></i> 공문 리스트 목록 <span class="bg-blue-100 text-blue-800 font-bold text-xs px-2.5 py-0.5 rounded-full" id="list-count-badge">0</span>
+                        </h4>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-200 text-gray-500 font-semibold text-xs">
+                                    <th class="py-4 px-6">문서 번호</th>
+                                    <th class="py-4 px-6">수신처</th>
+                                    <th class="py-4 px-6">공문 제목</th>
+                                    <th class="py-4 px-6">발신 현장/부서</th>
+                                    <th class="py-4 px-6">시행일자</th>
+                                    <th class="py-4 px-6 text-right">관리 작업</th>
+                                </tr>
+                            </thead>
+                            <tbody id="master-list-table" class="divide-y divide-gray-100 text-gray-700">
+                                <!-- JS 동적 필터링 반영 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 3. 공문 작성 / 편집 뷰 (실시간 PDF 듀얼 분할창) -->
+            <div id="view-create" class="absolute inset-0 flex overflow-hidden hidden">
+                <!-- 왼쪽: 공문서 입력 폼 -->
+                <section class="w-1/2 overflow-y-auto p-8 border-r border-gray-200 no-print space-y-6">
+                    
+                    <!-- 템플릿 퀵바 & AI 공문 도우미 -->
+                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-5 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-2 text-blue-800 font-bold text-sm">
+                                <i data-lucide="sparkles" class="w-5 h-5"></i>
+                                <span>실시간 템플릿 빠른 완성 & AI 비서</span>
+                            </div>
+                            <span class="text-[10px] bg-green-100 text-green-800 px-2 py-0.5 rounded font-bold" id="autosave-badge">자동 보존 활성</span>
+                        </div>
+                        
+                        <div class="space-y-2">
+                            <p class="text-xs text-blue-700 font-semibold">🤖 AI 공문 작성 도우미 (요청 즉시 초안 작성)</p>
+                            <div class="flex gap-2">
+                                <input type="text" id="ai-prompt-input" placeholder="예: 살수 작업 지원 협조 또는 안전 민원 대책 등 지시사항을 짧게 입력..." class="flex-1 px-3 py-1.5 text-xs border border-blue-300 rounded-lg focus:outline-none focus:border-blue-600">
+                                <button onclick="handleAIDraft()" id="ai-generate-btn" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors flex items-center gap-1">
+                                    <i data-lucide="wand-2" class="w-3.5 h-3.5"></i> AI 초안 생성
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="border-t border-blue-200/50 pt-2">
+                            <p class="text-[11px] text-blue-600 mb-1">📋 상용 공문 서식 즉시 세팅</p>
+                            <div class="flex flex-wrap gap-2">
+                                <button onclick="loadTemplate('work_plan')" class="px-2.5 py-1 bg-white border border-blue-300 text-blue-700 hover:bg-blue-100 text-[11px] font-semibold rounded-lg transition-colors shadow-sm">
+                                    주말 작업 계획서
+                                </button>
+                                <button onclick="loadTemplate('material_inspect')" class="px-2.5 py-1 bg-white border border-blue-300 text-blue-700 hover:bg-blue-100 text-[11px] font-semibold rounded-lg transition-colors shadow-sm">
+                                    자재 공급원 신청서
+                                </button>
+                                <button onclick="loadTemplate('cooperation_req')" class="px-2.5 py-1 bg-white border border-blue-300 text-blue-700 hover:bg-blue-100 text-[11px] font-semibold rounded-lg transition-colors shadow-sm">
+                                    휴일 살수 협조 요청
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 문서 기본 정보 카드 (채번 도우미 탑재) -->
+                    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm space-y-4">
+                        <div class="flex justify-between items-center border-b pb-3 border-gray-100">
+                            <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                                <i data-lucide="info" class="text-blue-600 w-5 h-5"></i> 문서 식별자 정보
+                            </h3>
+                            <button onclick="autoIncrementDocNumber()" class="text-xs bg-gray-100 hover:bg-gray-200 text-gray-700 px-2.5 py-1.5 rounded-lg border flex items-center gap-1 font-semibold transition-all">
+                                <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 번호 자동 채번
+                            </button>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">문서번호</label>
+                                <input type="text" id="doc_num" oninput="updatePreview()" value="캠프롱 제2026-092호" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">시행일자</label>
+                                <input type="date" id="doc_date" oninput="updatePreview()" value="2026-06-24" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">수신처</label>
+                                <input type="text" id="doc_receiver" oninput="updatePreview()" value="책임건설 사업관리 기술인" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">경유</label>
+                                <input type="text" id="doc_via" oninput="updatePreview()" value="" placeholder="없음" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">참조</label>
+                                <input type="text" id="doc_cc" oninput="updatePreview()" value="" placeholder="참조부서 및 직위 입력" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 결재선 설정 영역 -->
+                    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm space-y-4">
+                        <div class="flex items-center justify-between border-b pb-3 border-gray-100">
+                            <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                                <i data-lucide="check-square" class="text-blue-600 w-5 h-5"></i> 다단 결재선(Approval Line)
+                            </h3>
+                            <label class="relative inline-flex items-center cursor-pointer">
+                                <input type="checkbox" id="use-approval-toggle" checked onchange="toggleApprovalLine()" class="sr-only peer">
+                                <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-600"></div>
+                                <span class="ml-2 text-xs font-bold text-gray-600">결재란 출력</span>
+                            </label>
+                        </div>
+                        <div id="approval-inputs-container" class="grid grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-[10px] font-semibold text-gray-400 mb-0.5">결재1 (직위/이름)</label>
+                                <input type="text" id="app_user_1" oninput="updatePreview()" value="담당/이대리" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-gray-400 mb-0.5">결재2 (직위/이름)</label>
+                                <input type="text" id="app_user_2" oninput="updatePreview()" value="검토/박과장" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs">
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-gray-400 mb-0.5">결재3 (직위/이름)</label>
+                                <input type="text" id="app_user_3" oninput="updatePreview()" value="승인/김소장" class="w-full px-2.5 py-1.5 border border-gray-300 rounded-lg text-xs">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 공문 제목 및 본문 내용 -->
+                    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm space-y-4">
+                        <h3 class="text-base font-bold text-gray-800 flex items-center gap-2 border-b pb-3 border-gray-100">
+                            <i data-lucide="align-left" class="text-blue-600 w-5 h-5"></i> 제목 및 본문
+                        </h3>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">제목</label>
+                            <input type="text" id="doc_title" oninput="updatePreview()" value="2026년 07월 주말 공사 작업 계획서 제출의 건" class="w-full px-3 py-2 border border-gray-300 rounded-lg font-medium focus:outline-none focus:border-blue-500 text-sm">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-gray-500 mb-1">본문 내용 (각 문단은 엔터로 구분)</label>
+                            <textarea id="doc_content" oninput="updatePreview()" rows="6" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm font-normal leading-relaxed">1. 귀 사업단의 무궁한 발전을 기원합니다.
+2. 당사에서 시공 중인 「원주 캠프롱 문화체육공원 조성사업(조경, 토목)」과 관련하여, 2026년 07월 주말작업 계획서를 붙임과 같이 제출하오니 업무에 참조하시기 바랍니다.</textarea>
+                        </div>
+                    </div>
+
+                    <!-- 체계적 붙임 목록 빌더 -->
+                    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm space-y-4">
+                        <div class="flex justify-between items-center border-b pb-3 border-gray-100">
+                            <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                                <i data-lucide="paperclip" class="text-blue-600 w-5 h-5"></i> 붙임 서류 목록
+                            </h3>
+                            <button onclick="addAttachmentRow()" class="text-xs bg-blue-50 hover:bg-blue-100 text-blue-700 px-3 py-1.5 rounded-lg border border-blue-200 flex items-center gap-1 font-semibold transition-all">
+                                <i data-lucide="plus" class="w-3.5 h-3.5"></i> 붙임 추가
+                            </button>
+                        </div>
+                        <div id="attachment-list-container" class="space-y-2">
+                            <!-- JS를 통해 동적 행 추가 -->
+                        </div>
+                    </div>
+
+                    <!-- 발신 명의 및 폰트 크기 동적 조절기 -->
+                    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm space-y-4">
+                        <h3 class="text-base font-bold text-gray-800 flex items-center gap-2 border-b pb-3 border-gray-100">
+                            <i data-lucide="user-check" class="text-blue-600 w-5 h-5"></i> 발신 명의자 설정
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">서명인 직위 / 현장명</label>
+                                <input type="text" id="sender_title" oninput="updatePreview()" value="원주캠프롱 문화체육공원조성사업 현장 대리인" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">서명인 이름</label>
+                                <input type="text" id="sender_name" oninput="updatePreview()" value="김종남" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">직위 글꼴 크기 (<span id="val-sender-title-size" class="font-bold text-blue-600">18</span>px)</label>
+                                <input type="range" id="sender_title_size" min="12" max="32" value="18" oninput="updatePreview()" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">이름 글꼴 크기 (<span id="val-sender-name-size" class="font-bold text-blue-600">20</span>px)</label>
+                                <input type="range" id="sender_name_size" min="12" max="36" value="20" oninput="updatePreview()" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 기관(회사) 정보 카드 및 폰트 조절기 -->
+                    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm space-y-4">
+                        <h3 class="text-base font-bold text-gray-800 flex items-center gap-2 border-b pb-3 border-gray-100">
+                            <i data-lucide="building-2" class="text-blue-600 w-5 h-5"></i> 발신 본사 및 연락처 정보
+                        </h3>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">기관명 (회사명)</label>
+                                <input type="text" id="org_name" oninput="updatePreview()" value="주식회사 호반건설" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">기관명 글꼴 크기 (<span id="val-org-name-size" class="font-bold text-blue-600">18</span>px)</label>
+                                <input type="range" id="org_name_size" min="12" max="32" value="18" oninput="updatePreview()" class="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-blue-600">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">슬로건 (선택)</label>
+                                <input type="text" id="org_slogan" oninput="updatePreview()" value="&quot;고객으로부터 신뢰받고 사랑받은 기업&quot;" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">웹사이트</label>
+                                <input type="text" id="org_website" oninput="updatePreview()" value="www.ihoban.co.kr" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">우편번호</label>
+                                <input type="text" id="org_zip" oninput="updatePreview()" value="26313" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">주소</label>
+                                <input type="text" id="org_address" oninput="updatePreview()" value="강원특별자치도 원주시 태장동 1191번지" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">전화번호</label>
+                                <input type="text" id="org_tel" oninput="updatePreview()" value="(033)744-8125" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">팩스번호</label>
+                                <input type="text" id="org_fax" oninput="updatePreview()" value="(033)732-4867" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-blue-500 text-sm">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 작업 저장/제출 섹션 (최하단) -->
+                    <div class="flex gap-4 pb-8">
+                        <button onclick="resetForm()" class="flex-1 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 text-sm font-semibold rounded-xl transition-all">
+                            작성폼 초기화
+                        </button>
+                        <button onclick="saveCurrentDocument()" class="flex-1 py-3 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-xl transition-all shadow-md flex items-center justify-center gap-2">
+                            <i data-lucide="check" class="w-4 h-4"></i> 공문 저장 및 발행
+                        </button>
+                    </div>
+
+                </section>
+
+                <!-- 오른쪽: 실시간 A4 PDF 스타일 렌더러 미리보기 -->
+                <section class="w-1/2 bg-gray-100 p-8 overflow-y-auto flex justify-center items-start">
+                    
+                    <!-- A4 비율 가상 문서 컨테이너 -->
+                    <div id="print-area" class="preview-a4 flex flex-col justify-between text-gray-900 border border-gray-200">
+                        
+                        <!-- 공문서 상단 헤더 영역 -->
+                        <div>
+                            <!-- 회사 CI 로고 및 슬로건 영역 -->
+                            <div class="relative border-b-2 border-gray-800 pb-3 text-center">
+                                <!-- 실시간 결재선 영역 -->
+                                <div id="preview-approval-box" class="absolute right-0 top-0 hidden">
+                                    <table class="border-collapse border border-gray-400 text-center text-[10px] font-semibold bg-white">
+                                        <tr>
+                                            <td class="border border-gray-400 py-0.5 px-2 bg-gray-50" id="preview-app-title-1">담당</td>
+                                            <td class="border border-gray-400 py-0.5 px-2 bg-gray-50" id="preview-app-title-2">검토</td>
+                                            <td class="border border-gray-400 py-0.5 px-2 bg-gray-50" id="preview-app-title-3">승인</td>
+                                        </tr>
+                                        <tr class="h-10">
+                                            <td class="border border-gray-400 text-[8px] text-gray-300" id="preview-app-name-1">(인)</td>
+                                            <td class="border border-gray-400 text-[8px] text-gray-300" id="preview-app-name-2">(인)</td>
+                                            <td class="border border-gray-400 text-[8px] text-gray-300" id="preview-app-name-3">(인)</td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <!-- 중앙 정렬 메인 헤더 스택 -->
+                                <div class="flex flex-col items-center justify-center space-y-1">
+                                    <p class="text-xs text-gray-500 font-medium italic tracking-wide" id="preview-slogan">"고객으로부터 신뢰받고 사랑받은 기업"</p>
+                                    <h2 class="font-extrabold text-gray-900 tracking-wider" id="preview-org-name" style="font-size: 18px;">주식회사 호반건설</h2>
+                                    <p class="text-xs text-gray-400 font-mono tracking-normal" id="preview-website">www.ihoban.co.kr</p>
+                                </div>
+                            </div>
+
+                            <!-- 기관 상세 연락처 정보 -->
+                            <div class="border-b border-gray-200 py-2.5 text-[11px] text-gray-500 flex justify-between">
+                                <div>
+                                    <span id="preview-zip-address">우(26313) 강원특별자치도 원주시 태장동 1191번지</span>
+                                </div>
+                                <div class="space-x-2">
+                                    <span>전화: <span id="preview-tel">(033)744-8125</span></span>
+                                    <span>/</span>
+                                    <span>팩스: <span id="preview-fax">(033)732-4867</span></span>
+                                </div>
+                            </div>
+
+                            <!-- 발송 상세 정보 블록 (글자 크기를 본문과 동일한 text-base로 변경) -->
+                            <div class="mt-4 text-base grid grid-cols-12 gap-y-2 border-b border-gray-200 pb-4">
+                                <div class="col-span-3 text-gray-500 font-medium">문서번호</div>
+                                <div class="col-span-9 font-medium" id="preview-doc-num">: 캠프롱 제2026-092호</div>
+
+                                <div class="col-span-3 text-gray-500 font-medium">시행일자</div>
+                                <div class="col-span-9 font-medium" id="preview-doc-date">: 2026. 6. 24.</div>
+
+                                <div class="col-span-3 text-gray-500 font-medium">수 신</div>
+                                <div class="col-span-9 font-medium" id="preview-doc-receiver">: 책임건설 사업관리 기술인</div>
+
+                                <div class="col-span-3 text-gray-500 font-medium">경 유</div>
+                                <div class="col-span-9 font-medium" id="preview-doc-via">: </div>
+
+                                <div class="col-span-3 text-gray-500 font-medium">참 조</div>
+                                <div class="col-span-9 font-medium text-gray-400" id="preview-doc-cc">: </div>
+
+                                <div class="col-span-3 text-gray-500 font-bold mt-1">제 목</div>
+                                <div class="col-span-9 font-bold text-gray-900 mt-1" id="preview-doc-title">: 2026년 07월 주말 공사 작업 계획서 제출의 건</div>
+                            </div>
+
+                            <!-- 공문 본문 내용 영역 (text-base) -->
+                            <div class="mt-8 text-base leading-relaxed text-justify space-y-4 font-normal" id="preview-content">
+                                <!-- JS 실시간 생성 -->
+                            </div>
+
+                            <!-- 첨부 파일 영역 (글자 크기를 본문과 동일한 text-base로 변경) -->
+                            <div class="mt-8 text-base" id="preview-attachment-container">
+                                <div class="font-bold text-gray-800">붙 임 :</div>
+                                <ol class="list-decimal pl-8 text-gray-800" id="preview-attachment-list">
+                                    <!-- 실시간 추가된 붙임 서류 렌더링 -->
+                                </ol>
+                            </div>
+                        </div>
+
+                        <!-- 발신 명의 중앙 정렬 영역 및 도장마크 영구 제거 -->
+                        <div class="mt-12 text-center">
+                            <div class="border-t border-gray-800 pt-8 pb-4">
+                                <h3 class="text-lg font-bold text-gray-900 tracking-wider inline-block" id="preview-sender">
+                                    원주캠프롱 문화체육공원조성사업 현장 대리인 <span class="text-xl font-extrabold ml-2" id="preview-sender-name">김종남</span>
+                                </h3>
+                            </div>
+                        </div>
+
+                    </div>
+
+                </section>
+            </div>
+
+            <!-- 4. 시스템 설정 뷰 -->
+            <div id="view-settings" class="absolute inset-0 overflow-y-auto p-8 space-y-6 hidden">
+                <div class="max-w-4xl mx-auto space-y-6">
+                    
+                    <!-- 섹션 1: 신규 발송 기본값 설정 -->
+                    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm space-y-4">
+                        <div class="flex items-center gap-2 border-b pb-3 border-gray-100 justify-between">
+                            <h3 class="text-base font-bold text-gray-800 flex items-center gap-2">
+                                <i data-lucide="settings-2" class="text-blue-600 w-5 h-5"></i> 기본 작성 프로필 설정
+                            </h3>
+                            <span class="text-xs text-gray-400">새 작성 구동 시 이 기본 프로필 정보가 채워집니다.</span>
+                        </div>
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">기본 기관(회사)명</label>
+                                <input type="text" id="set-def-org" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">기본 슬로건</label>
+                                <input type="text" id="set-def-slogan" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">기본 서명인 직위</label>
+                                <input type="text" id="set-def-title" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">기본 서명인 성함</label>
+                                <input type="text" id="set-def-name" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            </div>
+                            <div class="col-span-2 grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 mb-1">대표 번호</label>
+                                    <input type="text" id="set-def-tel" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 mb-1">대표 팩스</label>
+                                    <input type="text" id="set-def-fax" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                </div>
+                                <div>
+                                    <label class="block text-xs font-semibold text-gray-500 mb-1">우편번호</label>
+                                    <input type="text" id="set-def-zip" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                                </div>
+                            </div>
+                            <div class="col-span-2">
+                                <label class="block text-xs font-semibold text-gray-500 mb-1">기본 주소</label>
+                                <input type="text" id="set-def-addr" class="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm">
+                            </div>
+                        </div>
+                        <div class="flex justify-end pt-2">
+                            <button onclick="saveSystemDefaults()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-bold transition-all shadow flex items-center gap-2">
+                                <i data-lucide="save" class="w-3.5 h-3.5"></i> 작성 기본값 프로필 저장
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 섹션 2: 백업 데이터 입출력 -->
+                    <div class="bg-white rounded-xl p-6 border border-gray-200 shadow-sm space-y-4">
+                        <h3 class="text-base font-bold text-gray-800 flex items-center gap-2 border-b pb-3 border-gray-100">
+                            <i data-lucide="database" class="text-blue-600 w-5 h-5"></i> 공문 DB 백업 및 복구
+                        </h3>
+                        <p class="text-xs text-gray-500 leading-relaxed">
+                            작성한 전체 공문 데이터를 로컬 PC로 내보내어 안전하게 보존하거나, 이전 백업본을 복구할 수 있습니다.
+                        </p>
+                        <div class="grid grid-cols-2 gap-4 pt-2">
+                            <div class="p-4 border border-dashed border-gray-200 rounded-xl space-y-3">
+                                <p class="text-xs font-bold text-gray-700">백업파일 생성</p>
+                                <p class="text-[11px] text-gray-400">현재 저장소의 모든 공문을 JSON 파일 포맷으로 일괄 백업합니다.</p>
+                                <button onclick="exportDatabase()" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-bold transition-colors flex items-center gap-2">
+                                    <i data-lucide="download" class="w-4 h-4"></i> 백업 파일 다운로드
+                                </button>
+                            </div>
+                            <div class="p-4 border border-dashed border-gray-200 rounded-xl space-y-3">
+                                <p class="text-xs font-bold text-gray-700">공문 복원 (JSON 가져오기)</p>
+                                <p class="text-[11px] text-gray-400">다운로드된 백업본을 가져와 데이터를 완벽하게 덮어씁니다.</p>
+                                <div class="flex items-center gap-2">
+                                    <input type="file" id="import-file-input" accept=".json" class="hidden" onchange="importDatabase(event)">
+                                    <button onclick="document.getElementById('import-file-input').click()" class="px-4 py-2 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-xs font-bold transition-colors flex items-center gap-2">
+                                        <i data-lucide="upload-cloud" class="w-4 h-4"></i> 백업파일 업로드
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 섹션 3: 시스템 전체 초기화 안전장치 -->
+                    <div class="bg-red-50 rounded-xl p-6 border border-red-100 shadow-sm space-y-4">
+                        <h3 class="text-base font-bold text-red-800 flex items-center gap-2">
+                            <i data-lucide="alert-triangle" class="w-5 h-5"></i> 시스템 제어 구역
+                        </h3>
+                        <p class="text-xs text-red-700 leading-relaxed">
+                            로컬 저장소에 누적된 공문서 정보 및 환경설정을 초기 데모 데이터셋 상태로 완벽 환원시킵니다.
+                        </p>
+                        <div class="pt-2">
+                            <button onclick="triggerResetSystem()" class="px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-bold transition-colors flex items-center gap-2 shadow-sm">
+                                <i data-lucide="refresh-cw" class="w-4 h-4"></i> 시스템 전체 데이터 초기화
+                            </button>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- 모달 뷰어 팝업 -->
+    <div id="preview-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center hidden no-print">
+        <div class="bg-white rounded-2xl w-[900px] max-h-[90vh] overflow-hidden flex flex-col shadow-2xl">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-[#1e2d4a] text-white">
+                <h3 class="font-bold text-base flex items-center gap-2">
+                    <i data-lucide="eye" class="w-5 h-5 text-blue-400"></i> 공문 뷰어 (인쇄 대기)
+                </h3>
+                <div class="flex items-center gap-2">
+                    <button onclick="printModalDocument()" class="bg-blue-600 hover:bg-blue-700 text-white text-xs px-4 py-2 rounded-lg font-bold transition-all flex items-center gap-2">
+                        <i data-lucide="printer" class="w-4 h-4"></i> 출력 및 PDF 저장
+                    </button>
+                    <button onclick="closePreviewModal()" class="text-gray-300 hover:text-white p-1">
+                        <i data-lucide="x" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-12 bg-gray-100 flex justify-center">
+                <!-- 원본 공문 미리보기 복제 공간 -->
+                <div id="modal-print-area" class="preview-a4 p-12 flex flex-col justify-between text-gray-900 border border-gray-200 bg-white">
+                    <!-- JS에 의해 복제 출력됨 -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 커스텀 예/아니오 확인 다이얼로그 모달 -->
+    <div id="confirm-dialog-modal" class="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center hidden no-print">
+        <div class="bg-white rounded-xl p-6 w-[400px] shadow-2xl space-y-5 border border-gray-100 transform scale-95 transition-all">
+            <div class="flex items-start gap-3">
+                <div class="p-2 bg-amber-50 text-amber-600 rounded-lg flex-shrink-0" id="confirm-icon-holder">
+                    <i data-lucide="help-circle" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-bold text-gray-900" id="confirm-title">알림 확인</h4>
+                    <p class="text-xs text-gray-500 mt-1.5 leading-relaxed" id="confirm-message">작업을 수행하시겠습니까?</p>
+                </div>
+            </div>
+            <div class="flex gap-2 justify-end">
+                <button onclick="closeConfirmDialog(false)" id="confirm-cancel-btn" class="px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-semibold rounded-lg transition-colors">
+                    취소
+                </button>
+                <button onclick="closeConfirmDialog(true)" id="confirm-ok-btn" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
+                    확인
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 커스텀 토스트 알림창 -->
+    <div id="toast-container" class="fixed bottom-6 right-6 z-50 space-y-2 pointer-events-none"></div>
+
+    <script>
+        // 기본 마스터 데이터셋 (로컬 스토리지에 없을 시 이 기본값으로 로드)
+        const defaultDocuments = [
+            {
+                id: '1',
+                doc_num: '캠프롱 제2026-092호',
+                doc_date: '2026-06-24',
+                doc_receiver: '책임건설 사업관리 기술인',
+                doc_via: '',
+                doc_cc: '',
+                doc_title: '2026년 07월 주말 공사 작업 계획서 제출의 건',
+                doc_content: '1. 귀 사업단의 무궁한 발전을 기원합니다.\n2. 당사에서 시공 중인 「원주 캠프롱 문화체육공원 조성사업(조경, 토목)」과 관련하여, 2026년 07월 주말작업 계획서를 붙임과 같이 제출하오니 업무에 참조하시기 바랍니다.',
+                doc_attachment_list: ['2026년 07월 주말작업 계획서 1부'],
+                sender_title: '원주캠프롱 문화체육공원조성사업 현장 대리인',
+                sender_name: '김종남',
+                org_name: '주식회사 호반건설',
+                org_slogan: '"고객으로부터 신뢰받고 사랑받은 기업"',
+                org_website: 'www.ihoban.co.kr',
+                org_zip: '26313',
+                org_address: '강원특별자치도 원주시 태장동 1191번지',
+                org_tel: '(033)744-8125',
+                org_fax: '(033)732-4867',
+                use_approval: true,
+                approval_line: ['담당/이대리', '검토/박과장', '승인/김소장']
+            },
+            {
+                id: '2',
+                doc_num: '캠프롱 제2026-085호',
+                doc_date: '2026-06-15',
+                doc_receiver: '원주시청 관광체육과',
+                doc_via: '',
+                doc_cc: '설계단 본부',
+                doc_title: '자재 검수 요청서 및 품질 시험 성적서 제출의 건',
+                doc_content: '1. 귀 청의 조속한 실무 및 행정 지원에 감사드립니다.\n2. 원주 캠프롱 문화체육공원 조성사업에 투입될 토양 개량제 자재의 시험 성적 완료본을 제출하오니, 현장 투입 자재에 대한 수입 및 검수를 검토하여 승인하여 주시기 바랍니다.',
+                doc_attachment_list: ['시험 검사대비 합격 성적 기록부 1부'],
+                sender_title: '원주캠프롱 문화체육공원조성사업 현장 대리인',
+                sender_name: '김종남',
+                org_name: '주식회사 호반건설',
+                org_slogan: '"고객으로부터 신뢰받고 사랑받은 기업"',
+                org_website: 'www.ihoban.co.kr',
+                org_zip: '26313',
+                org_address: '강원특별자치도 원주시 태장동 1191번지',
+                org_tel: '(033)744-8125',
+                org_fax: '(033)732-4867',
+                use_approval: true,
+                approval_line: ['담당/이대리', '검토/박과장', '승인/김소장']
+            },
+            {
+                id: '3',
+                doc_num: '캠프롱 제2026-042호',
+                doc_date: '2026-04-12',
+                doc_receiver: '책임건설 사업관리 기술인',
+                doc_via: '',
+                doc_cc: '',
+                doc_title: '원주 캠프롱 가설건축물 축조 신고 필증 통보의 건',
+                doc_content: '1. 관련 근거: 관광 개발-1542호 가설건축물 자문 결과서.\n2. 현장 가설 사무실 및 현장식당 이용을 위한 인허가 승인 가설건축물 축조 필증 교부 문서를 송부하오니 참고하여 주십시오.',
+                doc_attachment_list: ['가설건축물 축조신고 필증 사본 1부'],
+                sender_title: '원주캠프롱 문화체육공원조성사업 현장 대리인',
+                sender_name: '김종남',
+                org_name: '주식회사 호반건설',
+                org_slogan: '"고객으로부터 신뢰받고 사랑받은 기업"',
+                org_website: 'www.ihoban.co.kr',
+                org_zip: '26313',
+                org_address: '강원특별자치도 원주시 태장동 1191번지',
+                org_tel: '(033)744-8125',
+                org_fax: '(033)732-4867',
+                use_approval: false,
+                approval_line: ['', '', '']
+            }
+        ];
+
+        const defaultProfile = {
+            org_name: '주식회사 호반건설',
+            org_slogan: '"고객으로부터 신뢰받고 사랑받은 기업"',
+            org_website: 'www.ihoban.co.kr',
+            org_zip: '26313',
+            org_address: '강원특별자치도 원주시 태장동 1191번지',
+            org_tel: '(033)744-8125',
+            org_fax: '(033)732-4867',
+            sender_title: '원주캠프롱 문화체육공원조성사업 현장 대리인',
+            sender_name: '김종남'
+        };
+
+        // 상태 데이터 변수
+        let documents = [];
+        let selectedYearFilter = 'all';
+        let currentEditId = null; 
+        let activeTabId = 'dashboard';
+        let activeConfirmCallback = null; 
+
+        // 동적 첨부 서류 데이터 배열
+        let currentAttachments = ['2026년 07월 주말작업 계획서 1부'];
+
+        // 초기 시작 로직
+        window.onload = function() {
+            // 데모 보안용 로그인 세션 가상 확인
+            const session = sessionStorage.getItem('hoban_auth_session');
+            const overlay = document.getElementById('login-overlay');
+            if (session === 'authorized') {
+                overlay.style.display = 'none';
+            } else {
+                overlay.style.display = 'flex';
+            }
+
+            // 가상 데이터 복구
+            const stored = localStorage.getItem('hoban_docs_data');
+            if (stored) {
+                documents = JSON.parse(stored);
+            } else {
+                documents = [...defaultDocuments];
+                localStorage.setItem('hoban_docs_data', JSON.stringify(documents));
+            }
+
+            // 시스템 프로필 로드
+            loadProfileSettingsUI();
+
+            // 라이브 시간
+            setInterval(updateClock, 1000);
+            updateClock();
+
+            // 화면 렌더링
+            renderDashboard();
+            renderList();
+            renderAttachmentRows();
+            updatePreview();
+            lucide.createIcons();
+        }
+
+        // 라이브 시계
+        function updateClock() {
+            const today = new Date();
+            const timeStr = today.toLocaleDateString('ko-KR', {
+                year: 'numeric', month: 'long', day: 'numeric', weekday: 'short'
+            }) + ' ' + today.toLocaleTimeString('ko-KR', { hour12: false });
+            
+            const clockEl = document.getElementById('live-clock');
+            if (clockEl) {
+                clockEl.innerHTML = `<i data-lucide="clock" class="w-3.5 h-3.5 text-blue-600"></i> ${timeStr}`;
+                lucide.createIcons();
+            }
+        }
+
+        // 예/아니오 커스텀 확인 대화상자
+        function askConfirm(title, message, iconType, callback) {
+            document.getElementById('confirm-title').innerText = title;
+            document.getElementById('confirm-message').innerText = message;
+            
+            const iconHolder = document.getElementById('confirm-icon-holder');
+            if (iconType === 'danger') {
+                iconHolder.className = 'p-2 bg-red-50 text-red-600 rounded-lg flex-shrink-0';
+                iconHolder.innerHTML = `<i data-lucide="alert-triangle" class="w-6 h-6"></i>`;
+                document.getElementById('confirm-ok-btn').className = 'px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm';
+            } else {
+                iconHolder.className = 'p-2 bg-amber-50 text-amber-600 rounded-lg flex-shrink-0';
+                iconHolder.innerHTML = `<i data-lucide="help-circle" class="w-6 h-6"></i>`;
+                document.getElementById('confirm-ok-btn').className = 'px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg transition-colors shadow-sm';
+            }
+
+            activeConfirmCallback = callback;
+            document.getElementById('confirm-dialog-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closeConfirmDialog(isConfirmed) {
+            document.getElementById('confirm-dialog-modal').classList.add('hidden');
+            if (activeConfirmCallback) {
+                activeConfirmCallback(isConfirmed);
+                activeConfirmCallback = null;
+            }
+        }
+
+        // 가상 인증 로그인 연동
+        function handleLogin() {
+            const id = document.getElementById('login-id').value;
+            const pw = document.getElementById('login-pw').value;
+
+            if (id === 'admin' && pw === 'admin') {
+                sessionStorage.setItem('hoban_auth_session', 'authorized');
+                const overlay = document.getElementById('login-overlay');
+                overlay.classList.add('opacity-0', 'pointer-events-none');
+                setTimeout(() => {
+                    overlay.style.display = 'none';
+                    overlay.classList.remove('opacity-0', 'pointer-events-none');
+                }, 500);
+                showToast('공문 관리 시스템에 접속 완료하였습니다.', 'success');
+            } else {
+                showToast('아이디 또는 비밀번호가 틀립니다.', 'error');
+            }
+        }
+
+        // 로그아웃 구현
+        function triggerLogout() {
+            askConfirm(
+                '로그아웃',
+                '현 편집상태가 영구 저장되었는지 확인하시고, 안전 세션을 종료하고 나갑니다.',
+                'normal',
+                function(confirmed) {
+                    if (confirmed) {
+                        sessionStorage.removeItem('hoban_auth_session');
+                        const overlay = document.getElementById('login-overlay');
+                        overlay.style.display = 'flex';
+                        showToast('안전하게 시스템 세션을 분리했습니다.', 'success');
+                    }
+                }
+            );
+        }
+
+        // 프로필 관리 셋업
+        function loadProfileSettingsUI() {
+            const savedProfile = localStorage.getItem('hoban_system_profile');
+            const profile = savedProfile ? JSON.parse(savedProfile) : defaultProfile;
+
+            document.getElementById('set-def-org').value = profile.org_name;
+            document.getElementById('set-def-slogan').value = profile.org_slogan;
+            document.getElementById('set-def-title').value = profile.sender_title;
+            document.getElementById('set-def-name').value = profile.sender_name;
+            document.getElementById('set-def-tel').value = profile.org_tel;
+            document.getElementById('set-def-fax').value = profile.org_fax;
+            document.getElementById('set-def-zip').value = profile.org_zip;
+            document.getElementById('set-def-addr').value = profile.org_address;
+        }
+
+        function saveSystemDefaults() {
+            const profile = {
+                org_name: document.getElementById('set-def-org').value,
+                org_slogan: document.getElementById('set-def-slogan').value,
+                org_website: 'www.ihoban.co.kr',
+                org_zip: document.getElementById('set-def-zip').value,
+                org_address: document.getElementById('set-def-addr').value,
+                org_tel: document.getElementById('set-def-tel').value,
+                org_fax: document.getElementById('set-def-fax').value,
+                sender_title: document.getElementById('set-def-title').value,
+                sender_name: document.getElementById('set-def-name').value
+            };
+
+            localStorage.setItem('hoban_system_profile', JSON.stringify(profile));
+            showToast('공문 기본값 프로필이 변경 완료되었습니다.', 'success');
+            resetFormSilent();
+        }
+
+        // DB 백업본 생성 기능
+        function exportDatabase() {
+            try {
+                const dataStr = JSON.stringify(documents, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = `hoban_documents_backup_${new Date().toISOString().slice(0,10)}.json`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                showToast('전체 백업 파일 다운로드가 시작되었습니다.', 'success');
+            } catch (err) {
+                showToast('백업 생성 도중 에러가 발생했습니다.', 'error');
+            }
+        }
+
+        // DB 백업 복원 기능
+        function importDatabase(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (Array.isArray(parsed)) {
+                        documents = parsed;
+                        localStorage.setItem('hoban_docs_data', JSON.stringify(documents));
+                        renderDashboard();
+                        renderList();
+                        updatePreview();
+                        showToast(`총 ${parsed.length}건의 백업 공문 복원에 완료했습니다.`, 'success');
+                        switchTab('list');
+                    } else {
+                        showToast('올바른 백업 규격 파일이 아닙니다.', 'error');
+                    }
+                } catch (err) {
+                    showToast('백업 데이터 파일 파싱 에러가 발생했습니다.', 'error');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // 포장 초기화 복구 안전제어
+        function triggerResetSystem() {
+            askConfirm(
+                '시스템 완전 포장초기화',
+                '작성된 모든 문서 목록을 완전히 파기하고 공장초기화 상태로 되돌립니다. 진행할까요?',
+                'danger',
+                function(confirmed) {
+                    if (confirmed) {
+                        localStorage.removeItem('hoban_docs_data');
+                        localStorage.removeItem('hoban_system_profile');
+                        documents = [...defaultDocuments];
+                        localStorage.setItem('hoban_docs_data', JSON.stringify(documents));
+                        loadProfileSettingsUI();
+                        resetFormSilent();
+                        renderDashboard();
+                        renderList();
+                        showToast('모든 시스템 데이터가 초기화 복구되었습니다.', 'success');
+                        switchTab('dashboard');
+                    }
+                }
+            );
+        }
+
+        // 토스트 알림 생성기
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `p-4 rounded-xl shadow-lg border text-xs font-bold flex items-center gap-2 transform translate-y-2 opacity-0 transition-all duration-300 pointer-events-auto ${
+                type === 'success' ? 'bg-green-50 border-green-200 text-green-800' : 'bg-red-50 border-red-200 text-red-800'
+            }`;
+            
+            const icon = type === 'success' ? 'check-circle' : 'alert-circle';
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4"></i> <span>${message}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-y-2');
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // AI 비서 초안 자동 작성 연동
+        async function handleAIDraft() {
+            const prompt = document.getElementById('ai-prompt-input').value;
+            if (!prompt.trim()) {
+                showToast('초안 작성을 위한 주요 지시나 의제를 간략히 적어주세요.', 'error');
+                return;
+            }
+
+            const btn = document.getElementById('ai-generate-btn');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin inline-block w-3 h-3 border-2 border-white border-t-transparent rounded-full mr-1"></span> AI 분석중...`;
+
+            try {
+                const systemPrompt = `당신은 대한민국 건설 현장 및 대기업 관리공무 공문서 작성 전문가입니다. 사용자의 요청 의제를 확인하고, 대학교/기업/공공기관 규격에 완벽히 상응하는 정중하고 명확한 '공문서 제목'과 '공문서 본문 내용'을 작성해 주십시오. 
+반드시 다음 JSON 규격으로만 완벽한 순수 JSON 문자열로만 응답해 주세요. (마크다운의 \`\`\`json 이나 부가 설명은 일체 생략하십시오)
+형식:
+{
+  "title": "공문서 한 줄 제목",
+  "content": "1. 귀 사의 일익 번창과 무궁한 영광을 기원합니다.\\n2. [구체적인 의제 내용 및 근거 제시]\\n3. [협조 협의 요청 사항 전달]"
+}`;
+                
+                const userQuery = `작성 의제 요약: ${prompt}\n\n호반건설 공문 서식에 완벽 매칭되도록 완성도 높은 본문 텍스트 세트를 작성해 주세요.`;
+                const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=`;
+
+                const payload = {
+                    contents: [{ parts: [{ text: userQuery }] }],
+                    generationConfig: {
+                        responseMimeType: "application/json"
+                    },
+                    systemInstruction: {
+                        parts: [{ text: systemPrompt }]
+                    }
+                };
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                const jsonText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+                
+                if (jsonText) {
+                    const parsed = JSON.parse(jsonText.trim());
+                    document.getElementById('doc_title').value = parsed.title;
+                    document.getElementById('doc_content').value = parsed.content;
+                    updatePreview();
+                    showToast('AI가 공문 본문 초안을 완성 및 로드했습니다.', 'success');
+                    document.getElementById('ai-prompt-input').value = '';
+                } else {
+                    throw new Error('파싱 실패');
+                }
+
+            } catch (err) {
+                console.error(err);
+                showToast('초안 설계 실패. 수동 입력을 권장합니다.', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
+        }
+
+        // 공문 번호 자동 채번 처리
+        function autoIncrementDocNumber() {
+            if (documents.length === 0) {
+                document.getElementById('doc_num').value = '캠프롱 제2026-001호';
+                updatePreview();
+                showToast('기존 이력이 없어 첫 번째 번호로 등록되었습니다.', 'success');
+                return;
+            }
+
+            const sorted = [...documents].sort((a, b) => new Date(b.doc_date) - new Date(a.doc_date));
+            const latestNum = sorted[0].doc_num;
+
+            const regex = /제(\d{4})-(\d+)/;
+            const match = latestNum.match(regex);
+
+            if (match) {
+                const year = match[1];
+                const count = parseInt(match[2]);
+                const nextCount = String(count + 1).padStart(3, '0');
+                const incremented = latestNum.replace(regex, `제${year}-${nextCount}`);
+                
+                document.getElementById('doc_num').value = incremented;
+                updatePreview();
+                showToast(`다음 채번 [${incremented}]이 자동 완성되었습니다.`, 'success');
+            } else {
+                const fallback = `캠프롱 제2026-${String(documents.length + 1).padStart(3, '0')}호`;
+                document.getElementById('doc_num').value = fallback;
+                updatePreview();
+                showToast(`패턴 분석 제한으로 번호 [${fallback}]가 대체 채번되었습니다.`, 'success');
+            }
+        }
+
+        // 붙임 목록 처리 핸들러
+        function renderAttachmentRows() {
+            const container = document.getElementById('attachment-list-container');
+            container.innerHTML = '';
+
+            currentAttachments.forEach((attach, idx) => {
+                const row = document.createElement('div');
+                row.className = 'flex items-center gap-2';
+                row.innerHTML = `
+                    <span class="text-xs font-bold text-gray-500 w-5">${idx + 1}.</span>
+                    <input type="text" value="${attach}" oninput="updateAttachmentValue(${idx}, this.value)" placeholder="예: 주말공사 계획서 사본 1부" class="flex-1 px-3 py-1.5 border border-gray-300 rounded-lg text-xs focus:outline-none focus:border-blue-500">
+                    <button onclick="removeAttachmentRow(${idx})" class="p-1.5 text-red-500 hover:bg-red-50 rounded-lg border border-transparent transition-all">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                    </button>
+                `;
+                container.appendChild(row);
+            });
+            lucide.createIcons();
+        }
+
+        function addAttachmentRow() {
+            currentAttachments.push('');
+            renderAttachmentRows();
+            updatePreview();
+        }
+
+        function removeAttachmentRow(idx) {
+            currentAttachments.splice(idx, 1);
+            renderAttachmentRows();
+            updatePreview();
+        }
+
+        function updateAttachmentValue(idx, val) {
+            currentAttachments[idx] = val;
+            updatePreview();
+        }
+
+        // 결재선 활성화 스위치 제어
+        function toggleApprovalLine() {
+            const toggle = document.getElementById('use-approval-toggle');
+            const inputs = document.getElementById('approval-inputs-container');
+            if (toggle.checked) {
+                inputs.classList.remove('opacity-40', 'pointer-events-none');
+            } else {
+                inputs.classList.add('opacity-40', 'pointer-events-none');
+            }
+            updatePreview();
+        }
+
+        // 대시보드 통계 계산 및 누적 처리
+        function renderDashboard() {
+            const total = documents.length;
+            document.getElementById('stat-total').innerText = `${total} 건`;
+
+            const targetMonth = '2026-06';
+            const monthCount = documents.filter(d => d.doc_date.startsWith(targetMonth)).length;
+            document.getElementById('stat-month').innerText = `${monthCount} 건`;
+
+            const targetYear = '2026';
+            const yearCount = documents.filter(d => d.doc_date.startsWith(targetYear)).length;
+            document.getElementById('stat-year').innerText = `${yearCount} 건`;
+
+            const monthlyStats = Array(7).fill(0);
+            documents.forEach(d => {
+                if (d.doc_date.startsWith('2026-')) {
+                    const month = parseInt(d.doc_date.split('-')[1]);
+                    if (month >= 1 && month <= 7) {
+                        monthlyStats[month - 1]++;
+                    }
+                }
+            });
+
+            const chartBars = document.getElementById('chart-bars');
+            chartBars.innerHTML = '';
+            
+            const maxVal = Math.max(...monthlyStats, 1);
+            monthlyStats.forEach((count, idx) => {
+                const pct = (count / maxVal) * 100;
+                const barHeight = Math.max(pct, 5); 
+                
+                const col = document.createElement('div');
+                col.className = 'flex flex-col items-center flex-1 group';
+                col.innerHTML = `
+                    <div class="relative w-7 bg-blue-500 rounded-t-md hover:bg-blue-600 transition-all flex items-end justify-center cursor-pointer" style="height: ${barHeight}%;">
+                        <span class="absolute -top-7 text-[10px] font-bold text-blue-700 opacity-0 group-hover:opacity-100 transition-opacity bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200">${count}건</span>
+                    </div>
+                `;
+                chartBars.appendChild(col);
+            });
+
+            const recentDocs = [...documents].sort((a, b) => new Date(b.doc_date) - new Date(a.doc_date)).slice(0, 5);
+            const recentTable = document.getElementById('dashboard-recent-table');
+            recentTable.innerHTML = '';
+
+            if (recentDocs.length === 0) {
+                recentTable.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-gray-400 text-xs">문서 목록이 깨끗합니다.</td></tr>`;
+                return;
+            }
+
+            recentDocs.forEach(doc => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 border-b border-gray-100 transition-colors';
+                tr.innerHTML = `
+                    <td class="py-3.5 pl-2 font-semibold text-xs text-gray-500">${doc.doc_num}</td>
+                    <td class="py-3.5 text-xs text-gray-700">${doc.doc_receiver}</td>
+                    <td class="py-3.5 text-xs font-semibold text-gray-900 truncate max-w-[200px]">${doc.doc_title}</td>
+                    <td class="py-3.5 text-xs text-gray-400">${doc.doc_date}</td>
+                    <td class="py-3.5 pr-2 text-right">
+                        <div class="inline-flex gap-1.5">
+                            <button onclick="openPreviewModal('${doc.id}')" class="p-1 text-blue-600 hover:bg-blue-50 rounded" title="공문 뷰어"><i data-lucide="eye" class="w-4 h-4"></i></button>
+                            <button onclick="editDocument('${doc.id}')" class="p-1 text-gray-600 hover:bg-gray-100 rounded" title="수정"><i data-lucide="pencil" class="w-4 h-4"></i></button>
+                        </div>
+                    </td>
+                `;
+                recentTable.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        // 마스터 공문서 목록 출력
+        function renderList() {
+            const tableBody = document.getElementById('master-list-table');
+            tableBody.innerHTML = '';
+
+            const keyword = document.getElementById('search-keyword').value.toLowerCase();
+
+            const filtered = documents.filter(doc => {
+                if (selectedYearFilter !== 'all') {
+                    const docYear = doc.doc_date.split('-')[0];
+                    if (docYear !== selectedYearFilter) return false;
+                }
+                if (keyword) {
+                    const inTitle = doc.doc_title.toLowerCase().includes(keyword);
+                    const inNum = doc.doc_num.toLowerCase().includes(keyword);
+                    const inRec = doc.doc_receiver.toLowerCase().includes(keyword);
+                    if (!inTitle && !inNum && !inRec) return false;
+                }
+                return true;
+            });
+
+            document.getElementById('list-count-badge').innerText = filtered.length;
+
+            if (filtered.length === 0) {
+                tableBody.innerHTML = `
+                    <tr>
+                        <td colspan="6" class="py-12 text-center text-gray-400 text-sm">
+                            <i data-lucide="folder-open" class="w-8 h-8 mx-auto mb-2 opacity-50"></i>
+                            검색 조건에 일치하는 기록이 없습니다.
+                        </td>
+                    </tr>
+                `;
+                lucide.createIcons();
+                return;
+            }
+
+            filtered.sort((a, b) => new Date(b.doc_date) - new Date(a.doc_date));
+
+            filtered.forEach(doc => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 border-b border-gray-100 transition-all';
+                tr.innerHTML = `
+                    <td class="py-4 px-6 font-semibold text-xs text-gray-500">${doc.doc_num}</td>
+                    <td class="py-4 px-6 text-sm font-medium text-gray-800">${doc.doc_receiver}</td>
+                    <td class="py-4 px-6 text-sm font-semibold text-gray-900">${doc.doc_title}</td>
+                    <td class="py-4 px-6 text-xs text-gray-500">${doc.sender_title}</td>
+                    <td class="py-4 px-6 text-sm text-gray-500 font-mono">${doc.doc_date}</td>
+                    <td class="py-4 px-6 text-right">
+                        <div class="inline-flex gap-2">
+                            <button onclick="openPreviewModal('${doc.id}')" class="px-2.5 py-1 text-xs bg-blue-50 text-blue-600 hover:bg-blue-100 font-bold rounded-md flex items-center gap-1">
+                                <i data-lucide="eye" class="w-3.5 h-3.5"></i> 미리보기
+                            </button>
+                            <button onclick="editDocument('${doc.id}')" class="px-2.5 py-1 text-xs bg-gray-100 text-gray-700 hover:bg-gray-200 font-bold rounded-md flex items-center gap-1">
+                                <i data-lucide="pencil" class="w-3.5 h-3.5"></i> 수정
+                            </button>
+                            <button onclick="deleteDocument('${doc.id}')" class="px-2.5 py-1 text-xs bg-red-50 text-red-600 hover:bg-red-100 font-bold rounded-md flex items-center gap-1">
+                                <i data-lucide="trash-2" class="w-3.5 h-3.5"></i> 삭제
+                            </button>
+                        </div>
+                    </td>
+                `;
+                tableBody.appendChild(tr);
+            });
+            lucide.createIcons();
+        }
+
+        function applyFilters() {
+            renderList();
+        }
+
+        function setYearFilter(year) {
+            selectedYearFilter = year;
+            const btnAll = document.getElementById('btn-filter-all');
+            const btn2026 = document.getElementById('btn-filter-2026');
+            const btn2025 = document.getElementById('btn-filter-2025');
+
+            [btnAll, btn2026, btn2025].forEach(btn => {
+                btn.className = "px-4 py-1.5 rounded-md text-xs font-bold transition-all text-gray-500 hover:text-gray-800";
+            });
+
+            const activeBtn = document.getElementById(`btn-filter-${year}`);
+            activeBtn.className = "px-4 py-1.5 rounded-md text-xs font-bold transition-all bg-white text-blue-600 shadow-sm";
+
+            renderList();
+        }
+
+        function switchTab(tabId) {
+            activeTabId = tabId;
+            const tabs = ['view-dashboard', 'view-list', 'view-create', 'view-settings'];
+            tabs.forEach(tab => {
+                document.getElementById(tab).classList.add('hidden');
+            });
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+
+            const menuIds = ['menu-dashboard', 'menu-list', 'menu-create', 'menu-settings'];
+            menuIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (!element) return;
+                if (id === `menu-${tabId}`) {
+                    element.classList.add('bg-[#2b3c5d]', 'text-white');
+                    element.classList.remove('text-gray-400');
+                } else {
+                    element.classList.remove('bg-[#2b3c5d]', 'text-white');
+                    element.classList.add('text-gray-400');
+                }
+            });
+
+            const pageTitle = document.getElementById('page-title');
+            if (tabId === 'dashboard') {
+                pageTitle.innerText = '대시보드';
+            } else if (tabId === 'list') {
+                pageTitle.innerText = '공문 목록';
+            } else if (tabId === 'settings') {
+                pageTitle.innerText = '시스템 설정';
+            } else {
+                pageTitle.innerText = currentEditId ? '공문서 편집' : '공문서 신규 작성';
+            }
+        }
+
+        // 빠른 상용 서식 로딩 템플릿 데이터셋
+        const templates = {
+            work_plan: {
+                doc_title: '2026년 07월 주말 공사 작업 계획서 제출의 건',
+                doc_content: '1. 귀 사업단의 무궁한 발전을 기원합니다.\n2. 당사에서 시공 중인 「원주 캠프롱 문화체육공원 조성사업(조경, 토목)」과 관련하여, 2026년 07월 주말작업 계획서를 붙임과 같이 제출하오니 업무에 참조하시기 바랍니다.',
+                doc_attachment_list: ['2026년 07월 주말작업 계획서 1부'],
+                sender_title: '원주캠프롱 문화체육공원조성사업 현장 대리인',
+                sender_name: '김종남'
+            },
+            material_inspect: {
+                doc_title: '자외선 차단 방수 실란트 주요 공정 자재 공급원 승인 요청의 건',
+                doc_content: '1. 관련 근거: 책임 시방 기준서 제12장 방수 공사 지침.\n2. 현장 구조물 조인트 보강을 위하여 설계 스펙에 의거한 적합 승인 자재 일체를 붙임과 같이 대리 제출하오니 검토 후 최종 자재 공급원 검수를 필해 주시기 바랍니다.',
+                doc_attachment_list: ['자재 물성 시험 및 제조 생산 인허가 증빙서 1부', '공급원 기성 계약 증명 사본 1부'],
+                sender_title: '원주캠프롱 문화체육공원조성사업 현장 대리인',
+                sender_name: '김종남'
+            },
+            cooperation_req: {
+                doc_title: '비산먼지 억제를 위한 주말 노면 살수 협조 지원 요청의 건',
+                doc_content: '1. 귀 관리공단의 안전 무사고 준수를 희망합니다.\n2. 당사 진출입로 구역 인근 민원 예방 및 비산 먼지 억제를 원활히 조치하고자, 주말 유휴 살수 장비의 동원 공급 협조를 요청드리오니 검토를 부탁드립니다.',
+                doc_attachment_list: ['노면 작업 배치 노선 구획안 1부'],
+                sender_title: '원주캠프롱 문화체육공원조성사업 현장 대리인',
+                sender_name: '김종남'
+            }
+        };
+
+        function loadTemplate(key) {
+            const data = templates[key];
+            if (data) {
+                document.getElementById('doc_title').value = data.doc_title;
+                document.getElementById('doc_content').value = data.doc_content;
+                currentAttachments = [...data.doc_attachment_list];
+                renderAttachmentRows();
+                updatePreview();
+                showToast('템플릿 서식을 불러왔습니다.', 'success');
+            }
+        }
+
+        // 실시간 미리보기 렌더 엔진
+        function updatePreview() {
+            document.getElementById('preview-doc-num').innerText = ': ' + document.getElementById('doc_num').value;
+            
+            const dateVal = document.getElementById('doc_date').value;
+            if (dateVal) {
+                const dateObj = new Date(dateVal);
+                const formattedDate = `${dateObj.getFullYear()}. ${dateObj.getMonth() + 1}. ${dateObj.getDate()}.`;
+                document.getElementById('preview-doc-date').innerText = ': ' + formattedDate;
+            } else {
+                document.getElementById('preview-doc-date').innerText = ': ';
+            }
+
+            document.getElementById('preview-doc-receiver').innerText = ': ' + document.getElementById('doc_receiver').value;
+            
+            const viaVal = document.getElementById('doc_via').value;
+            document.getElementById('preview-doc-via').innerText = ': ' + (viaVal ? viaVal : '');
+
+            const ccVal = document.getElementById('doc_cc').value;
+            document.getElementById('preview-doc-cc').innerText = ': ' + (ccVal ? ccVal : '');
+
+            document.getElementById('preview-doc-title').innerText = ': ' + document.getElementById('doc_title').value;
+
+            // 본문 내용 렌더링 (text-base)
+            const rawContent = document.getElementById('doc_content').value;
+            const contentContainer = document.getElementById('preview-content');
+            contentContainer.innerHTML = ''; 
+
+            const paragraphs = rawContent.split('\n');
+            paragraphs.forEach(para => {
+                if (para.trim()) {
+                    const p = document.createElement('p');
+                    p.className = 'text-justify indent-0 text-gray-800 leading-relaxed text-base';
+                    p.innerText = para;
+                    contentContainer.appendChild(p);
+                }
+            });
+
+            // 첨부 파일 영역 (text-base로 크기 통일)
+            const attachContainer = document.getElementById('preview-attachment-container');
+            const attachList = document.getElementById('preview-attachment-list');
+            attachList.innerHTML = '';
+
+            const validAttachments = currentAttachments.filter(v => v.trim() !== '');
+
+            if (validAttachments.length > 0) {
+                attachContainer.style.display = 'block';
+                validAttachments.forEach((item, idx) => {
+                    const li = document.createElement('li');
+                    li.className = 'text-gray-800 leading-relaxed text-base';
+                    if (idx === validAttachments.length - 1) {
+                        li.innerHTML = `${item}. <span class="font-bold ml-1 text-gray-900">끝.</span>`;
+                    } else {
+                        li.innerText = `${item}.`;
+                    }
+                    attachList.appendChild(li);
+                });
+            } else {
+                attachContainer.style.display = 'none';
+            }
+
+            // 다단 결재선 동적 렌더링
+            const useApproval = document.getElementById('use-approval-toggle').checked;
+            const previewApprovalBox = document.getElementById('preview-approval-box');
+
+            if (useApproval) {
+                previewApprovalBox.classList.remove('hidden');
+                
+                const val1 = document.getElementById('app_user_1').value.split('/');
+                const val2 = document.getElementById('app_user_2').value.split('/');
+                const val3 = document.getElementById('app_user_3').value.split('/');
+
+                document.getElementById('preview-app-title-1').innerText = val1[0] || '담당';
+                document.getElementById('preview-app-name-1').innerText = val1[1] || '(인)';
+
+                document.getElementById('preview-app-title-2').innerText = val2[0] || '검토';
+                document.getElementById('preview-app-name-2').innerText = val2[1] || '(인)';
+
+                document.getElementById('preview-app-title-3').innerText = val3[0] || '승인';
+                document.getElementById('preview-app-name-3').innerText = val3[1] || '(인)';
+            } else {
+                previewApprovalBox.classList.add('hidden');
+            }
+
+            // 발신자 명의 정보
+            const senderTitle = document.getElementById('sender_title').value;
+            const senderName = document.getElementById('sender_name').value;
+            const titleSizeVal = document.getElementById('sender_title_size').value;
+            const nameSizeVal = document.getElementById('sender_name_size').value;
+
+            document.getElementById('val-sender-title-size').innerText = titleSizeVal;
+            document.getElementById('val-sender-name-size').innerText = nameSizeVal;
+
+            document.getElementById('preview-sender').innerHTML = `
+                <span style="font-size: ${titleSizeVal}px">${senderTitle}</span> 
+                <span class="font-extrabold ml-2" style="font-size: ${nameSizeVal}px">${senderName}</span>
+            `;
+
+            // 본사 메타 연락처 셋업 및 기관명 글꼴 크기 연동
+            const orgName = document.getElementById('org_name').value;
+            const orgSizeVal = document.getElementById('org_name_size').value;
+
+            document.getElementById('val-org-name-size').innerText = orgSizeVal;
+            document.getElementById('preview-org-name').innerText = orgName;
+            document.getElementById('preview-org-name').style.fontSize = orgSizeVal + 'px';
+
+            document.getElementById('preview-slogan').innerText = document.getElementById('org_slogan').value;
+            document.getElementById('preview-website').innerText = document.getElementById('org_website').value;
+            
+            const zip = document.getElementById('org_zip').value;
+            const address = document.getElementById('org_address').value;
+            document.getElementById('preview-zip-address').innerText = `우(${zip}) ${address}`;
+
+            document.getElementById('preview-tel').innerText = document.getElementById('org_tel').value;
+            document.getElementById('preview-fax').innerText = document.getElementById('org_fax').value;
+
+            // 로컬 임시 세션 보존
+            const draftObj = {
+                doc_num: document.getElementById('doc_num').value,
+                doc_date: document.getElementById('doc_date').value,
+                doc_receiver: document.getElementById('doc_receiver').value,
+                doc_via: document.getElementById('doc_via').value,
+                doc_cc: document.getElementById('doc_cc').value,
+                doc_title: document.getElementById('doc_title').value,
+                doc_content: document.getElementById('doc_content').value,
+                currentAttachments,
+                useApproval,
+                sender_title_size: titleSizeVal,
+                sender_name_size: nameSizeVal,
+                org_name_size: orgSizeVal,
+                approval_line: [
+                    document.getElementById('app_user_1').value,
+                    document.getElementById('app_user_2').value,
+                    document.getElementById('app_user_3').value
+                ]
+            };
+            sessionStorage.setItem('hoban_draft_session', JSON.stringify(draftObj));
+        }
+
+        // 공문 발행 저장 기능
+        function saveCurrentDocument() {
+            const newDoc = {
+                id: currentEditId || Date.now().toString(),
+                doc_num: document.getElementById('doc_num').value,
+                doc_date: document.getElementById('doc_date').value,
+                doc_receiver: document.getElementById('doc_receiver').value,
+                doc_via: document.getElementById('doc_via').value,
+                doc_cc: document.getElementById('doc_cc').value,
+                doc_title: document.getElementById('doc_title').value,
+                doc_content: document.getElementById('doc_content').value,
+                doc_attachment_list: [...currentAttachments.filter(v => v.trim() !== '')],
+                sender_title: document.getElementById('sender_title').value,
+                sender_name: document.getElementById('sender_name').value,
+                sender_title_size: document.getElementById('sender_title_size').value,
+                sender_name_size: document.getElementById('sender_name_size').value,
+                org_name: document.getElementById('org_name').value,
+                org_name_size: document.getElementById('org_name_size').value,
+                org_slogan: document.getElementById('org_slogan').value,
+                org_website: document.getElementById('org_website').value,
+                org_zip: document.getElementById('org_zip').value,
+                org_address: document.getElementById('org_address').value,
+                org_tel: document.getElementById('org_tel').value,
+                org_fax: document.getElementById('org_fax').value,
+                use_approval: document.getElementById('use-approval-toggle').checked,
+                approval_line: [
+                    document.getElementById('app_user_1').value,
+                    document.getElementById('app_user_2').value,
+                    document.getElementById('app_user_3').value
+                ]
+            };
+
+            if (!newDoc.doc_num || !newDoc.doc_title || !newDoc.doc_content) {
+                showToast('문서 식별번호, 공문제목, 본문내용은 필수 구성 사항입니다.', 'error');
+                return;
+            }
+
+            if (currentEditId) {
+                const idx = documents.findIndex(d => d.id === currentEditId);
+                if (idx !== -1) {
+                    documents[idx] = newDoc;
+                    showToast('공문서 수정 보존이 완료되었습니다.', 'success');
+                }
+                currentEditId = null;
+            } else {
+                documents.push(newDoc);
+                showToast('새 공문서의 발행 및 등록을 마쳤습니다.', 'success');
+            }
+
+            localStorage.setItem('hoban_docs_data', JSON.stringify(documents));
+            renderDashboard();
+            renderList();
+            switchTab('list');
+        }
+
+        // 공문 기록 편집 로드
+        function editDocument(id) {
+            const target = documents.find(d => d.id === id);
+            if (!target) return;
+
+            currentEditId = id;
+
+            document.getElementById('doc_num').value = target.doc_num;
+            document.getElementById('doc_date').value = target.doc_date;
+            document.getElementById('doc_receiver').value = target.doc_receiver;
+            document.getElementById('doc_via').value = target.doc_via;
+            document.getElementById('doc_cc').value = target.doc_cc;
+            document.getElementById('doc_title').value = target.doc_title;
+            document.getElementById('doc_content').value = target.doc_content;
+            
+            currentAttachments = target.doc_attachment_list ? [...target.doc_attachment_list] : [];
+            renderAttachmentRows();
+
+            document.getElementById('sender_title').value = target.sender_title;
+            document.getElementById('sender_name').value = target.sender_name;
+            document.getElementById('sender_title_size').value = target.sender_title_size || 18;
+            document.getElementById('sender_name_size').value = target.sender_name_size || 20;
+            document.getElementById('org_name').value = target.org_name;
+            document.getElementById('org_name_size').value = target.org_name_size || 18;
+            document.getElementById('org_slogan').value = target.org_slogan;
+            document.getElementById('org_website').value = target.org_website;
+            document.getElementById('org_zip').value = target.org_zip;
+            document.getElementById('org_address').value = target.org_address;
+            document.getElementById('org_tel').value = target.org_tel;
+            document.getElementById('org_fax').value = target.org_fax;
+
+            // 결재선 원본 복구
+            document.getElementById('use-approval-toggle').checked = target.use_approval || false;
+            if (target.approval_line) {
+                document.getElementById('app_user_1').value = target.approval_line[0] || '';
+                document.getElementById('app_user_2').value = target.approval_line[1] || '';
+                document.getElementById('app_user_3').value = target.approval_line[2] || '';
+            }
+            toggleApprovalLine();
+
+            updatePreview();
+            switchTab('create');
+            showToast('편집 대상 양식을 편집 세션에 불러왔습니다.', 'success');
+        }
+
+        // 공문 기록 삭제
+        function deleteDocument(id) {
+            askConfirm(
+                '공문 기록 파기',
+                '선택하신 공문 문서번호 내역을 서버 데이터베이스에서 즉시 소멸시킵니다. 계속하시겠습니까?',
+                'danger',
+                function(confirmed) {
+                    if (confirmed) {
+                        documents = documents.filter(d => d.id !== id);
+                        localStorage.setItem('hoban_docs_data', JSON.stringify(documents));
+                        renderDashboard();
+                        renderList();
+                        showToast('선택하신 공문 기록이 삭제 파기되었습니다.', 'success');
+                    }
+                }
+            );
+        }
+
+        // 모달 뷰어 세팅 및 결재선 렌더
+        function openPreviewModal(id) {
+            const target = documents.find(d => d.id === id);
+            if (!target) return;
+
+            let dateText = ': ';
+            if (target.doc_date) {
+                const dObj = new Date(target.doc_date);
+                dateText = `: ${dObj.getFullYear()}. ${dObj.getMonth() + 1}. ${dObj.getDate()}.`;
+            }
+
+            const contentPs = target.doc_content.split('\n').map(p => {
+                if (p.trim()) {
+                    return `<p class="text-justify indent-0 text-gray-800 leading-relaxed text-base">${p}</p>`;
+                }
+                return '';
+            }).join('');
+
+            // 다중 붙임 렌더 (text-base)
+            let attachmentBlock = '';
+            if (target.doc_attachment_list && target.doc_attachment_list.length > 0) {
+                const itemsHtml = target.doc_attachment_list.map((item, idx) => {
+                    const suffix = (idx === target.doc_attachment_list.length - 1) ? '. <span class="font-bold ml-1 text-gray-900">끝.</span>' : '.';
+                    return `<li class="text-gray-800 leading-relaxed text-base">${idx + 1}. ${item}${suffix}</li>`;
+                }).join('');
+                attachmentBlock = `
+                <div class="mt-8 text-base">
+                    <div class="font-bold text-gray-800">붙 임 :</div>
+                    <ol class="list-none pl-8 text-gray-800">${itemsHtml}</ol>
+                </div>`;
+            }
+
+            // 다단 결재선 복원 빌더
+            let approvalBoxHtml = '';
+            if (target.use_approval && target.approval_line) {
+                const val1 = target.approval_line[0]?.split('/') || ['담당', ''];
+                const val2 = target.approval_line[1]?.split('/') || ['검토', ''];
+                const val3 = target.approval_line[2]?.split('/') || ['승인', ''];
+
+                approvalBoxHtml = `
+                <div class="mb-2">
+                    <table class="border-collapse border border-gray-400 text-center text-[10px] font-semibold bg-white">
+                        <tr>
+                            <td class="border border-gray-400 py-0.5 px-2 bg-gray-50">${val1[0] || '담당'}</td>
+                            <td class="border border-gray-400 py-0.5 px-2 bg-gray-50">${val2[0] || '검토'}</td>
+                            <td class="border border-gray-400 py-0.5 px-2 bg-gray-50">${val3[0] || '승인'}</td>
+                        </tr>
+                        <tr class="h-10">
+                            <td class="border border-gray-400 text-[8px] text-gray-300">${val1[1] || '(인)'}</td>
+                            <td class="border border-gray-400 text-[8px] text-gray-300">${val2[1] || '(인)'}</td>
+                            <td class="border border-gray-400 text-[8px] text-gray-300">${val3[1] || '(인)'}</td>
+                        </tr>
+                    </table>
+                </div>`;
+            }
+
+            const titleSize = target.sender_title_size || 18;
+            const nameSize = target.sender_name_size || 20;
+            const orgSize = target.org_name_size || 18;
+
+            const modalBody = document.getElementById('modal-print-area');
+            modalBody.innerHTML = `
+                <!-- 상단 헤더 (슬로건, 기관명, 웹사이트 중앙 정렬) -->
+                <div>
+                    <div class="relative border-b-2 border-gray-800 pb-3 text-center">
+                        ${approvalBoxHtml ? `<div class="absolute right-0 top-0">${approvalBoxHtml}</div>` : ''}
+                        
+                        <div class="flex flex-col items-center justify-center space-y-1">
+                            <p class="text-xs text-gray-500 font-medium italic tracking-wide">${target.org_slogan}</p>
+                            <h2 class="font-extrabold text-gray-900 tracking-wider" style="font-size: ${orgSize}px">${target.org_name}</h2>
+                            <p class="text-xs text-gray-400 font-mono tracking-normal">${target.org_website}</p>
+                        </div>
+                    </div>
+
+                    <!-- 주소 연락처 문서 헤더 아래 탑재 -->
+                    <div class="border-b border-gray-200 py-2.5 text-[11px] text-gray-500 flex justify-between">
+                        <div>
+                            <span>우(${target.org_zip}) ${target.org_address}</span>
+                        </div>
+                        <div class="space-x-2">
+                            <span>전화: <span>${target.org_tel}</span></span>
+                            <span>/</span>
+                            <span>팩스: <span>${target.org_fax}</span></span>
+                        </div>
+                    </div>
+
+                    <!-- 메타 정보 수신처 (text-base로 크기 통일) -->
+                    <div class="mt-4 text-base grid grid-cols-12 gap-y-2 border-b border-gray-200 pb-4">
+                        <div class="col-span-3 text-gray-500 font-medium">문서번호</div>
+                        <div class="col-span-9 font-medium">: ${target.doc_num}</div>
+
+                        <div class="col-span-3 text-gray-500 font-medium">시행일자</div>
+                        <div class="col-span-9 font-medium">${dateText}</div>
+
+                        <div class="col-span-3 text-gray-500 font-medium">수 신</div>
+                        <div class="col-span-9 font-medium">: ${target.doc_receiver}</div>
+
+                        <div class="col-span-3 text-gray-500 font-medium">경 유</div>
+                        <div class="col-span-9 font-medium">: ${target.doc_via || ''}</div>
+
+                        <div class="col-span-3 text-gray-500 font-medium">참 조</div>
+                        <div class="col-span-9 font-medium text-gray-400">: ${target.doc_cc || ''}</div>
+
+                        <div class="col-span-3 text-gray-500 font-bold mt-1">제 목</div>
+                        <div class="col-span-9 font-bold text-gray-900 mt-1">: ${target.doc_title}</div>
+                    </div>
+
+                    <!-- 본문 -->
+                    <div class="mt-8 text-base leading-relaxed text-justify space-y-4 font-normal">
+                        ${contentPs}
+                    </div>
+
+                    <!-- 붙임 -->
+                    ${attachmentBlock}
+                </div>
+
+                <!-- 하단 대표인 (중앙 정렬, 도장 제거) -->
+                <div class="mt-12 text-center">
+                    <div class="border-t border-gray-800 pt-8 pb-4">
+                        <h3 class="font-bold text-gray-900 tracking-wider inline-block">
+                            <span style="font-size: ${titleSize}px">${target.sender_title}</span> 
+                            <span class="font-extrabold ml-2" style="font-size: ${nameSize}px">${target.sender_name}</span>
+                        </h3>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('preview-modal').classList.remove('hidden');
+            lucide.createIcons();
+        }
+
+        function closePreviewModal() {
+            document.getElementById('preview-modal').classList.add('hidden');
+        }
+
+        function printModalDocument() {
+            const originalPrintContent = document.getElementById('print-area').innerHTML;
+            document.getElementById('print-area').innerHTML = document.getElementById('modal-print-area').innerHTML;
+            window.print();
+            updatePreview();
+        }
+
+        function resetForm() {
+            resetFormSilent();
+            showToast('공문 입력 패널이 기본 프로필 기준 리셋되었습니다.', 'success');
+        }
+
+        function resetFormSilent() {
+            currentEditId = null;
+            const savedProfile = localStorage.getItem('hoban_system_profile');
+            const profile = savedProfile ? JSON.parse(savedProfile) : defaultProfile;
+
+            document.getElementById('doc_num').value = '캠프롱 제2026-092호';
+            document.getElementById('doc_date').value = '2026-06-24';
+            document.getElementById('doc_receiver').value = '책임건설 사업관리 기술인';
+            document.getElementById('doc_via').value = '';
+            document.getElementById('doc_cc').value = '';
+            document.getElementById('doc_title').value = '2026년 07월 주말 공사 작업 계획서 제출의 건';
+            document.getElementById('doc_content').value = '1. 귀 사업단의 무궁한 발전을 기원합니다.\n2. 당사에서 시공 중인 「원주 캠프롱 문화체육공원 조성사업(조경, 토목)」과 관련하여, 2026년 07월 주말작업 계획서를 붙임과 같이 제출하오니 업무에 참조하시기 바랍니다.';
+            
+            currentAttachments = ['2026년 07월 주말작업 계획서 1부'];
+            renderAttachmentRows();
+
+            document.getElementById('sender_title').value = profile.sender_title;
+            document.getElementById('sender_name').value = profile.sender_name;
+            document.getElementById('sender_title_size').value = 18;
+            document.getElementById('sender_name_size').value = 20;
+            document.getElementById('org_name').value = profile.org_name;
+            document.getElementById('org_name_size').value = 18;
+            document.getElementById('org_slogan').value = profile.org_slogan;
+            document.getElementById('org_website').value = profile.org_website;
+            document.getElementById('org_zip').value = profile.org_zip;
+            document.getElementById('org_address').value = profile.org_address;
+            document.getElementById('org_tel').value = profile.org_tel;
+            document.getElementById('org_fax').value = profile.org_fax;
+
+            document.getElementById('use-approval-toggle').checked = true;
+            document.getElementById('app_user_1').value = '담당/이대리';
+            document.getElementById('app_user_2').value = '검토/박과장';
+            document.getElementById('app_user_3').value = '승인/김소장';
+            toggleApprovalLine();
+            
+            updatePreview();
+        }
+    </script>
+</body>
+</html>
