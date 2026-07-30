@@ -219,6 +219,45 @@
             border-radius: 2px;
         }
 
+        /* Desktop Custom Scrollbar (PC 환경 최적화) */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.4);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(100, 116, 139, 0.6);
+            border-radius: 6px;
+            border: 2px solid transparent;
+            background-clip: padding-box;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(148, 163, 184, 0.8);
+            background-clip: padding-box;
+        }
+        * {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(100, 116, 139, 0.6) transparent;
+        }
+
+        /* Wide Desktop Optimization (1600px+) */
+        @media (min-width: 1600px) {
+            #sidebarPanel .w-80 {
+                width: 22rem; /* 사이드바 콘텐츠 패널을 살짝 넓게 */
+            }
+            main.page-container {
+                padding-left: 3rem;
+                padding-right: 3rem;
+            }
+        }
+        @media (min-width: 1920px) {
+            #sidebarPanel .w-80 {
+                width: 24rem;
+            }
+        }
+
         /* Print Engine Optimization - Strictly enforces custom page margins */
         @page {
             size: A4 portrait;
@@ -322,12 +361,12 @@
                 </div>
 
                 <!-- Zoom Level Controls -->
-                <div class="flex items-center bg-slate-800 rounded-lg p-1 border border-slate-700">
-                    <button id="zoomOutBtn" type="button" class="px-2 py-1 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition" title="축소">
+                <div class="flex items-center bg-slate-800 rounded-lg p-1 border border-slate-700" title="Ctrl(⌘)+마우스 휠로도 확대/축소 가능">
+                    <button id="zoomOutBtn" type="button" class="px-2 py-1 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition" title="축소 (Ctrl+휠)">
                         <i class="fa-solid fa-minus"></i>
                     </button>
                     <span id="zoomLevel" class="px-2 font-mono text-xs text-slate-300">100%</span>
-                    <button id="zoomInBtn" type="button" class="px-2 py-1 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition" title="확대">
+                    <button id="zoomInBtn" type="button" class="px-2 py-1 text-slate-300 hover:text-white hover:bg-slate-700 rounded transition" title="확대 (Ctrl+휠)">
                         <i class="fa-solid fa-plus"></i>
                     </button>
                     <button id="zoomResetBtn" type="button" class="px-2 py-1 text-xs text-slate-400 hover:text-white border-l border-slate-700 ml-1" title="리셋">
@@ -336,10 +375,17 @@
                 </div>
 
                 <!-- Calendar View Button -->
-                <button id="openCalendarBtn" type="button" class="relative flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition" title="공문 저장 달력">
+                <button id="openCalendarBtn" type="button" class="relative flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition" title="공문 저장 달력 (단축키: Ctrl+K)">
                     <i class="fa-solid fa-calendar-days text-amber-400"></i>
                     <span class="hidden sm:inline">공문 달력</span>
                     <span id="savedDocCountBadge" class="hidden absolute -top-1.5 -right-1.5 bg-amber-500 text-slate-950 text-[9px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">0</span>
+                </button>
+
+                <!-- Archive (Past Sent Documents) Button -->
+                <button id="openArchiveModalBtn" type="button" class="relative flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition" title="이전에 보낸 공문 등록/보관함">
+                    <i class="fa-solid fa-box-archive text-teal-400"></i>
+                    <span class="hidden sm:inline">지난 공문</span>
+                    <span id="archiveCountBadge" class="hidden absolute -top-1.5 -right-1.5 bg-teal-500 text-slate-950 text-[9px] font-bold rounded-full min-w-[16px] h-[16px] flex items-center justify-center px-1">0</span>
                 </button>
 
                 <!-- Save to Calendar Button -->
@@ -390,7 +436,7 @@
                     <span class="hidden sm:inline">여백 가이드</span>
                 </button>
 
-                <button id="toggleSidebarBtn" type="button" class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition">
+                <button id="toggleSidebarBtn" type="button" class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition" title="단축키: Ctrl+B">
                     <i class="fa-solid fa-sliders text-orange-400"></i>
                     <span class="hidden sm:inline">양식 패널</span>
                 </button>
@@ -401,8 +447,14 @@
                     <span id="editBtnText" class="hidden sm:inline">직접 편집</span>
                 </button>
 
+                <!-- Share Summary Button -->
+                <button id="copyShareSummaryBtn" type="button" class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition" title="카카오톡/메일용 요약 텍스트 복사">
+                    <i class="fa-solid fa-share-nodes text-emerald-400"></i>
+                    <span class="hidden sm:inline">요약 복사</span>
+                </button>
+
                 <!-- PDF/Print Button -->
-                <button id="printPdfBtn" type="button" class="flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-medium px-4 py-1.5 rounded-lg shadow-md transition">
+                <button id="printPdfBtn" type="button" class="flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-medium px-4 py-1.5 rounded-lg shadow-md transition" title="단축키: Ctrl+P">
                     <i class="fa-solid fa-print"></i>
                     <span>인쇄 / PDF</span>
                 </button>
@@ -458,6 +510,34 @@
                 
                 <!-- Tab 1: Document Metadata -->
                 <div id="tab-org" class="tab-content space-y-4">
+                    <!-- Site Profile Manager (기관정보+발신명의인 저장/전환) -->
+                    <div class="bg-gradient-to-br from-slate-800 to-slate-900 p-3 rounded-lg border border-purple-500/40 space-y-3">
+                        <h3 class="font-bold text-purple-300 text-xs flex items-center gap-1.5 border-b border-slate-700/60 pb-2">
+                            <i class="fa-solid fa-industry text-purple-400"></i> 현장 프로필 (기관정보 + 발신명의인)
+                        </h3>
+                        <div>
+                            <label class="text-slate-400 mb-1 block">저장된 현장 프로필 선택</label>
+                            <select id="siteProfileSelect" class="w-full bg-slate-950 border border-slate-700 text-slate-200 text-xs rounded px-2.5 py-1.5 focus:border-purple-500 outline-none cursor-pointer">
+                                <option value="">-- 프로필 선택 안 함 --</option>
+                            </select>
+                        </div>
+                        <div class="flex gap-2">
+                            <button id="applySiteProfileBtn" type="button" class="flex-1 bg-purple-600 hover:bg-purple-500 text-white py-1.5 rounded text-[11px] transition flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-download"></i> 선택 프로필 불러오기
+                            </button>
+                            <button id="deleteSiteProfileBtn" type="button" class="bg-slate-800 hover:bg-red-900/60 text-red-300 px-3 py-1.5 rounded text-[11px] transition border border-slate-700" title="선택 프로필 삭제">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </div>
+                        <div class="flex gap-2 pt-1 border-t border-slate-700/60">
+                            <input type="text" id="newSiteProfileNameInput" placeholder="새 프로필 이름 (예: 원주 캠프롱 현장)" class="flex-1 bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:border-purple-500 outline-none text-[11px]">
+                            <button id="saveSiteProfileBtn" type="button" class="bg-teal-600 hover:bg-teal-500 text-white px-3 py-1.5 rounded text-[11px] transition flex items-center gap-1 whitespace-nowrap">
+                                <i class="fa-solid fa-floppy-disk"></i> 현재값 저장
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-slate-500">현재 입력된 기관정보(슬로건/회사명/URL/주소)와 발신명의인을 이름 붙여 저장합니다. 다른 현장에서도 드롭다운으로 불러와 재사용할 수 있습니다.</p>
+                    </div>
+
                     <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/60 space-y-3">
                         <h3 class="font-bold text-slate-200 text-xs flex items-center gap-1.5 border-b border-slate-700/60 pb-2">
                             <i class="fa-solid fa-building text-orange-400"></i> 발신 회사/기관 정보
@@ -477,6 +557,16 @@
                         <div>
                             <label class="text-slate-400 mb-1 block">주소 및 연락처 (하단 바)</label>
                             <textarea id="inputAddressInfo" rows="2" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:border-orange-500 outline-none leading-relaxed"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/60 space-y-3">
+                        <h3 class="font-bold text-slate-200 text-xs flex items-center gap-1.5 border-b border-slate-700/60 pb-2">
+                            <i class="fa-solid fa-user-check text-purple-400"></i> 발신 명의인 / 현장대리인
+                        </h3>
+                        <div>
+                            <label class="text-slate-400 mb-1 block">직함 및 대리인 성명 (결문 직함)</label>
+                            <input type="text" id="inputSignerTitle" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:border-orange-500 outline-none">
                         </div>
                     </div>
                 </div>
@@ -523,16 +613,6 @@
                         <div>
                             <label class="text-slate-400 mb-1 block">문서 제목</label>
                             <input type="text" id="inputSubject" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:border-orange-500 outline-none font-medium">
-                        </div>
-                    </div>
-
-                    <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/60 space-y-3">
-                        <h3 class="font-bold text-slate-200 text-xs flex items-center gap-1.5 border-b border-slate-700/60 pb-2">
-                            <i class="fa-solid fa-user-check text-purple-400"></i> 발신 명의인 / 현장대리인
-                        </h3>
-                        <div>
-                            <label class="text-slate-400 mb-1 block">직함 및 대리인 성명 (결문 직함)</label>
-                            <input type="text" id="inputSignerTitle" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:border-orange-500 outline-none">
                         </div>
                     </div>
                 </div>
@@ -632,7 +712,18 @@
                             </label>
                         </div>
 
-                        <div class="space-y-2">
+                        <!-- Seal Mode Switch: Text-Generated vs Scanned Image -->
+                        <div class="grid grid-cols-2 gap-1.5 bg-slate-950/60 p-1 rounded-lg border border-slate-800">
+                            <button type="button" id="sealModeTextBtn" class="seal-mode-btn text-[11px] py-1.5 rounded-md transition bg-red-600 text-white">
+                                <i class="fa-solid fa-font"></i> 텍스트 직인 생성
+                            </button>
+                            <button type="button" id="sealModeImageBtn" class="seal-mode-btn text-[11px] py-1.5 rounded-md transition text-slate-400 hover:text-slate-200">
+                                <i class="fa-solid fa-image"></i> 스캔 도장 등록
+                            </button>
+                        </div>
+
+                        <!-- Text-Generated Seal Options -->
+                        <div id="sealTextOptions" class="space-y-2">
                             <div>
                                 <label class="text-slate-400 mb-1 block">직인 문구 (3줄 구성)</label>
                                 <input type="text" id="sealTextLine1" value="주식회사" placeholder="첫째줄 (예: 주식회사)" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1 mb-1 text-slate-200">
@@ -654,6 +745,37 @@
                                     <input type="range" id="sealRotateRange" min="-30" max="30" value="-5" class="w-full accent-red-500">
                                 </div>
                             </div>
+                        </div>
+
+                        <!-- Scanned Seal Image Registration -->
+                        <div id="sealImageOptions" class="space-y-2 hidden">
+                            <div>
+                                <label class="text-slate-400 mb-1 block">스캔 도장 이미지 등록 (배경 투명 PNG 권장)</label>
+                                <input type="file" id="sealImageFileInput" accept="image/*" class="w-full text-slate-300 text-[11px] file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-red-600 file:text-white file:cursor-pointer bg-slate-900 border border-slate-700 rounded">
+                                <p id="sealImageFileNamePreview" class="text-[10px] text-slate-500 mt-1"></p>
+                            </div>
+                            <div class="flex items-center gap-3 bg-slate-950/60 border border-slate-800 rounded-lg p-2">
+                                <div class="w-16 h-16 rounded bg-slate-900 border border-slate-700 flex items-center justify-center overflow-hidden shrink-0">
+                                    <img id="sealImagePreview" class="max-w-full max-h-full object-contain hidden" alt="도장 미리보기">
+                                    <i id="sealImagePreviewPlaceholder" class="fa-solid fa-stamp text-slate-600 text-xl"></i>
+                                </div>
+                                <div class="flex-grow text-[10px] text-slate-500">
+                                    스캔한 도장/직인 이미지를 등록하면 문서에 그대로 표시됩니다. 배경이 흰색인 이미지는 배경 제거 없이 그대로 사용됩니다.
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-2 pt-1">
+                                <div>
+                                    <label class="text-slate-400 mb-1 block">도장 크기</label>
+                                    <input type="range" id="sealImageSizeRange" min="40" max="140" value="80" class="w-full accent-red-500">
+                                </div>
+                                <div>
+                                    <label class="text-slate-400 mb-1 block">회전 각도</label>
+                                    <input type="range" id="sealImageRotateRange" min="-30" max="30" value="0" class="w-full accent-red-500">
+                                </div>
+                            </div>
+                            <button id="removeSealImageBtn" type="button" class="w-full bg-slate-800 hover:bg-red-900/50 text-red-300 py-1.5 rounded border border-slate-700 text-[11px] transition flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-trash-can"></i> 등록된 도장 이미지 제거
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -844,7 +966,7 @@
 
             <!-- Sidebar Footer Status -->
             <div class="p-3 border-t border-slate-800 bg-slate-950 text-slate-400 text-[11px] flex items-center justify-between gap-2">
-                <button id="saveDraftBtn" type="button" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700 transition flex items-center gap-1">
+                <button id="saveDraftBtn" type="button" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700 transition flex items-center gap-1" title="단축키: Ctrl+S">
                     <i class="fa-solid fa-floppy-disk text-orange-400"></i> 임시 저장
                 </button>
                 <button id="clearAllDraftBtn" type="button" class="hover:text-red-400 transition flex items-center gap-1" title="모든 내용 초기화">
@@ -1023,6 +1145,7 @@
                                     <div id="sealStamp" class="seal-stamp">
                                         <span id="sealStampText">주식회사<br>호반건설<br>직인</span>
                                     </div>
+                                    <img id="sealImageStamp" class="hidden" alt="스캔 직인" style="object-fit: contain;">
                                 </div>
 
                                 <!-- Moveable Signature Graphic Overlay -->
@@ -1122,6 +1245,18 @@
                     <span id="githubConnStatus" class="text-[10px] px-2 py-0.5 rounded-full border border-slate-700 text-slate-400">미연결</span>
                 </div>
 
+                <!-- Local Storage Usage Gauge -->
+                <div class="bg-slate-950/60 border border-slate-800 rounded-lg p-3 space-y-1.5">
+                    <div class="flex items-center justify-between text-[11px]">
+                        <span class="text-slate-400 flex items-center gap-1.5"><i class="fa-solid fa-database text-slate-500"></i> 브라우저 저장공간 사용량</span>
+                        <span id="localStorageUsageText" class="font-mono text-slate-300">- KB</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                        <div id="localStorageUsageBar" class="h-full bg-emerald-500 transition-all" style="width: 0%;"></div>
+                    </div>
+                    <p class="text-[10px] text-slate-500">브라우저별로 보통 5~10MB까지 저장 가능합니다. 여유가 부족하면 지난 공문 보관함의 오래된 파일을 정리하거나 GitHub로 백업 후 삭제하세요.</p>
+                </div>
+
                 <!-- Token Input -->
                 <div>
                     <label class="text-slate-400 mb-1 block">GitHub Personal Access Token (repo 권한)</label>
@@ -1151,6 +1286,9 @@
                     <button id="backupToGithubBtn" type="button" class="w-full bg-cyan-600 hover:bg-cyan-500 text-white font-medium py-2 rounded transition flex items-center justify-center gap-2">
                         <i class="fa-solid fa-upload"></i> 지금 백업하기
                     </button>
+                    <button id="backupAllToGithubBtn" type="button" class="w-full bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-cyan-700/50 py-2 rounded transition flex items-center justify-center gap-2 text-[11px]">
+                        <i class="fa-solid fa-layer-group"></i> 전체 백업 (현재 문서 + 달력 + 지난 공문 보관함)
+                    </button>
                 </div>
 
                 <!-- Restore List -->
@@ -1171,6 +1309,82 @@
         </div>
     </div>
 
+    <!-- Archive Modal: Register & Browse Past Sent Documents (Image/PDF) -->
+    <div id="archiveModal" class="no-print fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center hidden p-4">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-3xl w-full shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="px-6 py-4 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
+                <div class="flex items-center gap-2.5">
+                    <i class="fa-solid fa-box-archive text-teal-400 text-lg"></i>
+                    <h2 class="font-bold text-slate-100 text-base">지난 공문 보관함 (이미지 · PDF)</h2>
+                </div>
+                <button id="closeArchiveModalBtn" type="button" class="text-slate-400 hover:text-white p-1 rounded-lg">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-grow space-y-4 text-xs">
+                <!-- Register New Archive Entry -->
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/60 space-y-3">
+                    <h3 class="font-bold text-slate-200 flex items-center gap-1.5 border-b border-slate-700/60 pb-2">
+                        <i class="fa-solid fa-file-circle-plus text-teal-400"></i> 이전 공문 등록
+                    </h3>
+
+                    <div>
+                        <label class="text-slate-400 mb-1 block">파일 선택 (이미지 또는 PDF)</label>
+                        <input type="file" id="archiveFileInput" accept="image/*,.pdf" class="w-full text-slate-300 text-[11px] file:mr-3 file:py-1.5 file:px-3 file:rounded file:border-0 file:bg-teal-600 file:text-white file:cursor-pointer bg-slate-900 border border-slate-700 rounded">
+                        <p id="archiveFileNamePreview" class="text-[10px] text-slate-500 mt-1"></p>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="text-slate-400 mb-1 block">문서 번호</label>
+                            <input type="text" id="archiveDocNumInput" placeholder="예: 캠프롱 제2025-88호" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:border-teal-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="text-slate-400 mb-1 block">시행 일자</label>
+                            <input type="date" id="archiveDateInput" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:border-teal-500 outline-none">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-slate-400 mb-1 block">문서 제목</label>
+                        <input type="text" id="archiveSubjectInput" placeholder="예: 2025년 12월 주말작업 계획서 제출의 건" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:border-teal-500 outline-none">
+                    </div>
+                    <div>
+                        <label class="text-slate-400 mb-1 block">수신자 (선택)</label>
+                        <input type="text" id="archiveRecipientInput" placeholder="예: 책임건설 사업관리 기술인" class="w-full bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:border-teal-500 outline-none">
+                    </div>
+
+                    <button id="registerArchiveBtn" type="button" class="w-full bg-teal-600 hover:bg-teal-500 text-white font-medium py-2 rounded transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-plus"></i> 보관함에 등록
+                    </button>
+                </div>
+
+                <!-- Archive List -->
+                <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/60 space-y-2">
+                    <div class="flex items-center justify-between border-b border-slate-700/60 pb-2">
+                        <h3 class="font-bold text-slate-200 flex items-center gap-1.5">
+                            <i class="fa-solid fa-list text-slate-300"></i> 등록된 지난 공문
+                        </h3>
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-500 text-xs"></i>
+                            <input type="text" id="archiveSearchInput" placeholder="문서번호·제목·수신자 검색" class="bg-slate-900 border border-slate-700 text-slate-200 text-xs rounded-lg pl-7 pr-2 py-1.5 w-48 focus:ring-2 focus:ring-teal-500 outline-none">
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-[11px]">
+                        <button id="archiveGithubBackupBtn" type="button" class="flex-1 bg-slate-900 hover:bg-slate-800 text-teal-300 border border-teal-700/50 rounded py-1.5 flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-brands fa-github"></i> GitHub에 보관함 백업
+                        </button>
+                        <button id="archiveGithubRestoreBtn" type="button" class="flex-1 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-700/50 rounded py-1.5 flex items-center justify-center gap-1.5 transition">
+                            <i class="fa-solid fa-cloud-arrow-down"></i> GitHub에서 복원
+                        </button>
+                    </div>
+                    <div id="archiveList" class="space-y-2 max-h-72 overflow-y-auto">
+                        <div class="text-slate-500 text-[11px] py-6 text-center">등록된 지난 공문이 없습니다.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <input type="file" id="logoFileInput" class="hidden" accept="image/*">
 
@@ -1222,11 +1436,15 @@
                 ],
                 seal: {
                     visible: false,
+                    mode: 'text', // 'text' | 'image'
                     line1: '주식회사',
                     line2: '호반건설',
                     line3: '직인',
                     shape: 'circle-double',
-                    rotate: -5
+                    rotate: -5,
+                    imageDataUrl: '',
+                    imageSize: 80,
+                    imageRotate: 0
                 },
                 // Print Margin State Object
                 margin: {
@@ -1417,6 +1635,17 @@
             const sealTextLine2 = document.getElementById('sealTextLine2');
             const sealTextLine3 = document.getElementById('sealTextLine3');
             const sealShapeSelect = document.getElementById('sealShapeSelect');
+            const sealModeTextBtn = document.getElementById('sealModeTextBtn');
+            const sealModeImageBtn = document.getElementById('sealModeImageBtn');
+            const sealTextOptions = document.getElementById('sealTextOptions');
+            const sealImageOptions = document.getElementById('sealImageOptions');
+            const sealImageFileInput = document.getElementById('sealImageFileInput');
+            const sealImageFileNamePreview = document.getElementById('sealImageFileNamePreview');
+            const sealImagePreview = document.getElementById('sealImagePreview');
+            const sealImagePreviewPlaceholder = document.getElementById('sealImagePreviewPlaceholder');
+            const sealImageSizeRange = document.getElementById('sealImageSizeRange');
+            const sealImageRotateRange = document.getElementById('sealImageRotateRange');
+            const removeSealImageBtn = document.getElementById('removeSealImageBtn');
             const sealRotateRange = document.getElementById('sealRotateRange');
             const sealStampWrap = document.getElementById('sealStampWrap');
             const sealStamp = document.getElementById('sealStamp');
@@ -1806,12 +2035,31 @@
 
             function updateSealVisuals() {
                 if (!sealStampWrap || !sealStamp || !sealStampText) return;
-                
+
                 if (!state.seal.visible) {
                     sealStampWrap.classList.add('hidden');
                     return;
                 }
                 sealStampWrap.classList.remove('hidden');
+
+                const sealImageStamp = document.getElementById('sealImageStamp');
+
+                if (state.seal.mode === 'image' && state.seal.imageDataUrl) {
+                    // Scanned Seal Image Mode
+                    sealStamp.classList.add('hidden');
+                    if (sealImageStamp) {
+                        sealImageStamp.classList.remove('hidden');
+                        sealImageStamp.src = state.seal.imageDataUrl;
+                        sealImageStamp.style.width = `${state.seal.imageSize}px`;
+                        sealImageStamp.style.height = `${state.seal.imageSize}px`;
+                        sealImageStamp.style.transform = `rotate(${state.seal.imageRotate}deg)`;
+                    }
+                    return;
+                }
+
+                // Text-Generated Seal Mode
+                if (sealImageStamp) sealImageStamp.classList.add('hidden');
+                sealStamp.classList.remove('hidden');
 
                 sealStampText.innerHTML = `${state.seal.line1}<br>${state.seal.line2}<br>${state.seal.line3}`;
 
@@ -1946,6 +2194,10 @@
                 if (sealTextLine3) sealTextLine3.value = state.seal.line3;
                 if (sealShapeSelect) sealShapeSelect.value = state.seal.shape;
                 if (sealRotateRange) sealRotateRange.value = state.seal.rotate;
+                applySealModeUI();
+                if (sealImageSizeRange) sealImageSizeRange.value = state.seal.imageSize;
+                if (sealImageRotateRange) sealImageRotateRange.value = state.seal.imageRotate;
+                updateSealImagePreview();
 
                 applyPrintMargins();
                 applyFontSizes();
@@ -2280,6 +2532,104 @@
                 updateSealVisuals();
             });
 
+            // ==================== Seal Mode Switch & Scanned Seal Image Registration ====================
+            function applySealModeUI() {
+                const isImageMode = state.seal.mode === 'image';
+                if (sealModeTextBtn) {
+                    sealModeTextBtn.classList.toggle('bg-red-600', !isImageMode);
+                    sealModeTextBtn.classList.toggle('text-white', !isImageMode);
+                    sealModeTextBtn.classList.toggle('text-slate-400', isImageMode);
+                }
+                if (sealModeImageBtn) {
+                    sealModeImageBtn.classList.toggle('bg-red-600', isImageMode);
+                    sealModeImageBtn.classList.toggle('text-white', isImageMode);
+                    sealModeImageBtn.classList.toggle('text-slate-400', !isImageMode);
+                }
+                sealTextOptions?.classList.toggle('hidden', isImageMode);
+                sealImageOptions?.classList.toggle('hidden', !isImageMode);
+            }
+
+            function updateSealImagePreview() {
+                if (!sealImagePreview || !sealImagePreviewPlaceholder) return;
+                if (state.seal.imageDataUrl) {
+                    sealImagePreview.src = state.seal.imageDataUrl;
+                    sealImagePreview.classList.remove('hidden');
+                    sealImagePreviewPlaceholder.classList.add('hidden');
+                } else {
+                    sealImagePreview.classList.add('hidden');
+                    sealImagePreviewPlaceholder.classList.remove('hidden');
+                }
+            }
+
+            sealModeTextBtn?.addEventListener('click', () => {
+                state.seal.mode = 'text';
+                applySealModeUI();
+                updateSealVisuals();
+            });
+
+            sealModeImageBtn?.addEventListener('click', () => {
+                state.seal.mode = 'image';
+                applySealModeUI();
+                updateSealVisuals();
+            });
+
+            sealImageFileInput?.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                if (!/^image\//.test(file.type)) {
+                    alert('이미지 파일만 등록할 수 있습니다.');
+                    sealImageFileInput.value = '';
+                    return;
+                }
+                const MAX_SEAL_IMAGE_MB = 3;
+                if (file.size > MAX_SEAL_IMAGE_MB * 1024 * 1024) {
+                    alert(`도장 이미지 용량이 너무 큽니다. ${MAX_SEAL_IMAGE_MB}MB 이하의 파일을 사용해 주세요.`);
+                    sealImageFileInput.value = '';
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    state.seal.imageDataUrl = evt.target.result;
+                    state.seal.mode = 'image';
+                    if (sealImageFileNamePreview) {
+                        const sizeKb = Math.round(file.size / 1024);
+                        sealImageFileNamePreview.textContent = `등록됨: ${file.name} (${sizeKb} KB)`;
+                    }
+                    applySealModeUI();
+                    updateSealImagePreview();
+                    updateSealVisuals();
+                    showToast('스캔 도장 이미지가 등록되었습니다.');
+                };
+                reader.onerror = () => {
+                    alert('이미지를 읽는 중 오류가 발생했습니다.');
+                };
+                reader.readAsDataURL(file);
+            });
+
+            sealImageSizeRange?.addEventListener('input', (e) => {
+                state.seal.imageSize = parseInt(e.target.value, 10);
+                updateSealVisuals();
+            });
+
+            sealImageRotateRange?.addEventListener('input', (e) => {
+                state.seal.imageRotate = parseInt(e.target.value, 10);
+                updateSealVisuals();
+            });
+
+            removeSealImageBtn?.addEventListener('click', () => {
+                if (!state.seal.imageDataUrl) {
+                    showToast('등록된 도장 이미지가 없습니다.');
+                    return;
+                }
+                if (!confirm('등록된 스캔 도장 이미지를 제거하시겠습니까?')) return;
+                state.seal.imageDataUrl = '';
+                if (sealImageFileInput) sealImageFileInput.value = '';
+                if (sealImageFileNamePreview) sealImageFileNamePreview.textContent = '';
+                updateSealImagePreview();
+                updateSealVisuals();
+                showToast('스캔 도장 이미지가 제거되었습니다.');
+            });
+
             // QR Code Event Listeners
             toggleQrCheckbox?.addEventListener('change', (e) => {
                 state.qr.visible = e.target.checked;
@@ -2470,6 +2820,16 @@
                 updateZoomDisplay();
             });
 
+            // Ctrl/Cmd + Mouse Wheel : 문서 확대/축소 (PC 환경 마우스 상호작용 개선)
+            const zoomScrollArea = document.querySelector('main.page-container');
+            zoomScrollArea?.addEventListener('wheel', (e) => {
+                if (!(e.ctrlKey || e.metaKey)) return;
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? -0.1 : 0.1;
+                state.zoom = Math.max(0.5, Math.min(1.6, state.zoom + delta));
+                updateZoomDisplay();
+            }, { passive: false });
+
             // Toggle Sidebar
             toggleSidebarBtn?.addEventListener('click', () => {
                 sidebarPanel?.classList.toggle('-ml-80');
@@ -2595,8 +2955,33 @@
                 return decodeURIComponent(escape(atob(b64)));
             }
 
+            function updateLocalStorageUsageUI() {
+                const usageText = document.getElementById('localStorageUsageText');
+                const usageBar = document.getElementById('localStorageUsageBar');
+                if (!usageText || !usageBar) return;
+
+                let totalBytes = 0;
+                try {
+                    for (const key in localStorage) {
+                        if (Object.prototype.hasOwnProperty.call(localStorage, key)) {
+                            const value = localStorage.getItem(key) || '';
+                            totalBytes += (key.length + value.length) * 2; // UTF-16 approx bytes
+                        }
+                    }
+                } catch (e) { /* ignore */ }
+
+                const ESTIMATED_LIMIT_MB = 5; // 브라우저별 보수적 추정치
+                const usedMb = totalBytes / (1024 * 1024);
+                const pct = Math.min(100, Math.round((usedMb / ESTIMATED_LIMIT_MB) * 100));
+
+                usageText.textContent = `${usedMb.toFixed(2)} MB / 약 ${ESTIMATED_LIMIT_MB} MB (${pct}%)`;
+                usageBar.style.width = `${pct}%`;
+                usageBar.className = `h-full transition-all ${pct >= 85 ? 'bg-red-500' : pct >= 60 ? 'bg-amber-500' : 'bg-emerald-500'}`;
+            }
+
             openGithubModalBtn?.addEventListener('click', () => {
                 updateGithubConnStatusUI();
+                updateLocalStorageUsageUI();
                 githubModal?.classList.remove('hidden');
             });
             closeGithubModalBtn?.addEventListener('click', () => githubModal?.classList.add('hidden'));
@@ -2746,6 +3131,459 @@
 
             updateGithubConnStatusUI();
 
+            // ==================== Past Sent Document Archive (Image/PDF Registration) ====================
+            const ARCHIVE_STORAGE_KEY = 'official_doc_archive_list';
+            const ARCHIVE_MAX_FILE_MB = 8; // localStorage 용량 보호를 위한 파일당 용량 제한
+
+            const archiveModal = document.getElementById('archiveModal');
+            const openArchiveModalBtn = document.getElementById('openArchiveModalBtn');
+            const closeArchiveModalBtn = document.getElementById('closeArchiveModalBtn');
+            const archiveFileInput = document.getElementById('archiveFileInput');
+            const archiveFileNamePreview = document.getElementById('archiveFileNamePreview');
+            const archiveDocNumInput = document.getElementById('archiveDocNumInput');
+            const archiveDateInput = document.getElementById('archiveDateInput');
+            const archiveSubjectInput = document.getElementById('archiveSubjectInput');
+            const archiveRecipientInput = document.getElementById('archiveRecipientInput');
+            const registerArchiveBtn = document.getElementById('registerArchiveBtn');
+            const archiveList = document.getElementById('archiveList');
+            const archiveSearchInput = document.getElementById('archiveSearchInput');
+            const archiveCountBadge = document.getElementById('archiveCountBadge');
+
+            let archiveEntries = [];
+            let pendingArchiveFile = null; // { name, type, dataUrl }
+
+            function loadArchiveEntries() {
+                try {
+                    const saved = localStorage.getItem(ARCHIVE_STORAGE_KEY);
+                    archiveEntries = saved ? JSON.parse(saved) : [];
+                } catch (e) {
+                    archiveEntries = [];
+                }
+            }
+
+            function persistArchiveEntries() {
+                try {
+                    localStorage.setItem(ARCHIVE_STORAGE_KEY, JSON.stringify(archiveEntries));
+                } catch (e) {
+                    alert('저장 공간이 부족하여 보관함에 저장하지 못했습니다. 오래된 항목을 삭제한 후 다시 시도해 주세요.');
+                    console.error('보관함 저장 실패:', e);
+                    return false;
+                }
+                updateArchiveCountBadge();
+                if (typeof updateLocalStorageUsageUI === 'function') updateLocalStorageUsageUI();
+                return true;
+            }
+
+            function updateArchiveCountBadge() {
+                if (!archiveCountBadge) return;
+                const count = archiveEntries.length;
+                archiveCountBadge.textContent = count > 99 ? '99+' : String(count);
+                archiveCountBadge.classList.toggle('hidden', count === 0);
+            }
+
+            openArchiveModalBtn?.addEventListener('click', () => {
+                archiveModal?.classList.remove('hidden');
+                if (archiveSearchInput) archiveSearchInput.value = '';
+                renderArchiveList();
+            });
+            closeArchiveModalBtn?.addEventListener('click', () => archiveModal?.classList.add('hidden'));
+
+            archiveFileInput?.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (!file) {
+                    pendingArchiveFile = null;
+                    if (archiveFileNamePreview) archiveFileNamePreview.textContent = '';
+                    return;
+                }
+                if (!/^image\//.test(file.type) && file.type !== 'application/pdf') {
+                    alert('이미지 파일 또는 PDF 파일만 등록할 수 있습니다.');
+                    archiveFileInput.value = '';
+                    pendingArchiveFile = null;
+                    return;
+                }
+                if (file.size > ARCHIVE_MAX_FILE_MB * 1024 * 1024) {
+                    alert(`파일 용량이 너무 큽니다. ${ARCHIVE_MAX_FILE_MB}MB 이하의 파일을 사용해 주세요.`);
+                    archiveFileInput.value = '';
+                    pendingArchiveFile = null;
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    pendingArchiveFile = { name: file.name, type: file.type, dataUrl: evt.target.result };
+                    if (archiveFileNamePreview) {
+                        const sizeKb = Math.round(file.size / 1024);
+                        archiveFileNamePreview.textContent = `선택됨: ${file.name} (${sizeKb} KB)`;
+                    }
+                };
+                reader.onerror = () => {
+                    alert('파일을 읽는 중 오류가 발생했습니다.');
+                    pendingArchiveFile = null;
+                };
+                reader.readAsDataURL(file);
+            });
+
+            registerArchiveBtn?.addEventListener('click', () => {
+                if (!pendingArchiveFile) {
+                    showToast('먼저 이미지 또는 PDF 파일을 선택해 주세요.');
+                    return;
+                }
+                const docNum = archiveDocNumInput?.value.trim() || '(번호 미기재)';
+                const date = archiveDateInput?.value || '';
+                const subject = archiveSubjectInput?.value.trim() || '(제목 미기재)';
+                const recipient = archiveRecipientInput?.value.trim() || '';
+
+                const entry = {
+                    id: `arc_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+                    docNum, date, subject, recipient,
+                    fileName: pendingArchiveFile.name,
+                    fileType: pendingArchiveFile.type,
+                    dataUrl: pendingArchiveFile.dataUrl,
+                    registeredAt: new Date().toISOString()
+                };
+
+                archiveEntries.unshift(entry);
+                const ok = persistArchiveEntries();
+                if (ok) {
+                    showToast(`[${docNum}] 지난 공문이 보관함에 등록되었습니다.`);
+                    // Reset form
+                    if (archiveFileInput) archiveFileInput.value = '';
+                    if (archiveFileNamePreview) archiveFileNamePreview.textContent = '';
+                    if (archiveDocNumInput) archiveDocNumInput.value = '';
+                    if (archiveDateInput) archiveDateInput.value = '';
+                    if (archiveSubjectInput) archiveSubjectInput.value = '';
+                    if (archiveRecipientInput) archiveRecipientInput.value = '';
+                    pendingArchiveFile = null;
+                    renderArchiveList();
+                } else {
+                    archiveEntries.shift(); // 저장 실패 시 롤백
+                }
+            });
+
+            function renderArchiveList(filterQuery) {
+                if (!archiveList) return;
+                let list = archiveEntries;
+                if (filterQuery && filterQuery.trim() !== '') {
+                    const q = filterQuery.trim().toLowerCase();
+                    list = archiveEntries.filter(en =>
+                        en.docNum.toLowerCase().includes(q) ||
+                        en.subject.toLowerCase().includes(q) ||
+                        (en.recipient || '').toLowerCase().includes(q)
+                    );
+                }
+
+                if (list.length === 0) {
+                    archiveList.innerHTML = `<div class="text-slate-500 text-[11px] py-6 text-center">${archiveEntries.length === 0 ? '등록된 지난 공문이 없습니다.' : '검색 결과가 없습니다.'}</div>`;
+                    return;
+                }
+
+                archiveList.innerHTML = '';
+                list.forEach(entry => {
+                    const isPdf = entry.fileType === 'application/pdf';
+                    const item = document.createElement('div');
+                    item.className = 'bg-slate-900 border border-slate-800 p-2.5 rounded-lg flex items-center gap-3 hover:border-teal-500/50 transition';
+                    item.innerHTML = `
+                        <div class="w-11 h-11 rounded bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden border border-slate-700">
+                            ${isPdf
+                                ? '<i class="fa-solid fa-file-pdf text-red-400 text-xl"></i>'
+                                : `<img src="${entry.dataUrl}" class="w-full h-full object-cover" alt="thumbnail">`}
+                        </div>
+                        <div class="flex-grow min-w-0">
+                            <div class="flex items-center gap-2 text-[10px] text-slate-500 font-mono">
+                                <span>${escapeHtml(entry.docNum)}</span>
+                                ${entry.date ? `<span>· ${escapeHtml(entry.date)}</span>` : ''}
+                            </div>
+                            <div class="font-medium text-slate-200 truncate">${escapeHtml(entry.subject)}</div>
+                            ${entry.recipient ? `<div class="text-[10px] text-slate-500 truncate">수신: ${escapeHtml(entry.recipient)}</div>` : ''}
+                        </div>
+                        <div class="flex flex-col gap-1 shrink-0 text-[11px]">
+                            <button type="button" data-id="${entry.id}" class="archive-view-btn text-teal-400 hover:underline text-left">보기</button>
+                            <button type="button" data-id="${entry.id}" class="archive-download-btn text-amber-400 hover:underline text-left">다운로드</button>
+                            <button type="button" data-id="${entry.id}" class="archive-delete-btn text-red-400 hover:underline text-left">삭제</button>
+                        </div>
+                    `;
+                    archiveList.appendChild(item);
+                });
+
+                archiveList.querySelectorAll('.archive-view-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const entry = archiveEntries.find(e => e.id === btn.getAttribute('data-id'));
+                        if (!entry) return;
+                        const win = window.open('');
+                        if (!win) {
+                            alert('팝업이 차단되었습니다. 팝업 허용 후 다시 시도해 주세요.');
+                            return;
+                        }
+                        if (entry.fileType === 'application/pdf') {
+                            win.document.write(`<iframe src="${entry.dataUrl}" style="border:none;width:100%;height:100vh;"></iframe>`);
+                        } else {
+                            win.document.write(`<html><head><title>${entry.fileName}</title></head><body style="margin:0;background:#111;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${entry.dataUrl}" style="max-width:100%;max-height:100vh;"></body></html>`);
+                        }
+                    });
+                });
+
+                archiveList.querySelectorAll('.archive-download-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const entry = archiveEntries.find(e => e.id === btn.getAttribute('data-id'));
+                        if (!entry) return;
+                        const a = document.createElement('a');
+                        a.href = entry.dataUrl;
+                        a.download = entry.fileName || 'document';
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                    });
+                });
+
+                archiveList.querySelectorAll('.archive-delete-btn').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        const entry = archiveEntries.find(e => e.id === btn.getAttribute('data-id'));
+                        if (entry && confirm(`[${entry.docNum}] ${entry.subject}\n보관함에서 삭제하시겠습니까?`)) {
+                            archiveEntries = archiveEntries.filter(e => e.id !== entry.id);
+                            persistArchiveEntries();
+                            renderArchiveList(archiveSearchInput?.value || '');
+                            showToast('보관함에서 삭제되었습니다.');
+                        }
+                    });
+                });
+            }
+
+            archiveSearchInput?.addEventListener('input', (e) => {
+                renderArchiveList(e.target.value);
+            });
+
+            loadArchiveEntries();
+            updateArchiveCountBadge();
+
+            // ==================== Site Profile Manager (기관정보 + 발신명의인 다현장 재사용) ====================
+            const SITE_PROFILE_STORAGE_KEY = 'official_doc_site_profiles';
+            const siteProfileSelect = document.getElementById('siteProfileSelect');
+            const applySiteProfileBtn = document.getElementById('applySiteProfileBtn');
+            const deleteSiteProfileBtn = document.getElementById('deleteSiteProfileBtn');
+            const newSiteProfileNameInput = document.getElementById('newSiteProfileNameInput');
+            const saveSiteProfileBtn = document.getElementById('saveSiteProfileBtn');
+
+            let siteProfiles = [];
+
+            function loadSiteProfiles() {
+                try {
+                    const saved = localStorage.getItem(SITE_PROFILE_STORAGE_KEY);
+                    siteProfiles = saved ? JSON.parse(saved) : [];
+                } catch (e) {
+                    siteProfiles = [];
+                }
+            }
+
+            function persistSiteProfiles() {
+                try {
+                    localStorage.setItem(SITE_PROFILE_STORAGE_KEY, JSON.stringify(siteProfiles));
+                } catch (e) {
+                    alert('현장 프로필 저장에 실패했습니다.');
+                    console.error('현장 프로필 저장 실패:', e);
+                }
+            }
+
+            function renderSiteProfileOptions() {
+                if (!siteProfileSelect) return;
+                const currentValue = siteProfileSelect.value;
+                siteProfileSelect.innerHTML = '<option value="">-- 프로필 선택 안 함 --</option>' +
+                    siteProfiles.map(p => `<option value="${escapeHtml(p.id)}">${escapeHtml(p.name)}</option>`).join('');
+                if (siteProfiles.some(p => p.id === currentValue)) {
+                    siteProfileSelect.value = currentValue;
+                }
+            }
+
+            saveSiteProfileBtn?.addEventListener('click', () => {
+                const name = newSiteProfileNameInput?.value.trim();
+                if (!name) {
+                    showToast('저장할 프로필 이름을 입력해 주세요.');
+                    return;
+                }
+                const duplicate = siteProfiles.find(p => p.name === name);
+                if (duplicate && !confirm(`[${name}] 이름의 프로필이 이미 있습니다. 덮어쓰시겠습니까?`)) {
+                    return;
+                }
+
+                const profileData = {
+                    slogan: state.slogan || '',
+                    companyName: state.companyName || '',
+                    companyUrl: state.companyUrl || '',
+                    addressInfo: state.addressInfo || '',
+                    signerTitle: state.signerTitle || ''
+                };
+
+                if (duplicate) {
+                    duplicate.data = profileData;
+                    duplicate.updatedAt = new Date().toISOString();
+                } else {
+                    siteProfiles.push({
+                        id: `site_${Date.now()}_${Math.floor(Math.random() * 1000)}`,
+                        name,
+                        data: profileData,
+                        updatedAt: new Date().toISOString()
+                    });
+                }
+
+                persistSiteProfiles();
+                renderSiteProfileOptions();
+                if (newSiteProfileNameInput) newSiteProfileNameInput.value = '';
+                showToast(`[${name}] 현장 프로필이 저장되었습니다.`);
+            });
+
+            applySiteProfileBtn?.addEventListener('click', () => {
+                const id = siteProfileSelect?.value;
+                if (!id) {
+                    showToast('불러올 프로필을 선택해 주세요.');
+                    return;
+                }
+                const profile = siteProfiles.find(p => p.id === id);
+                if (!profile) return;
+
+                const d = profile.data;
+                state.slogan = d.slogan || '';
+                state.companyName = d.companyName || '';
+                state.companyUrl = d.companyUrl || '';
+                state.addressInfo = d.addressInfo || '';
+                state.signerTitle = d.signerTitle || '';
+
+                renderUI();
+                showToast(`[${profile.name}] 현장 프로필을 불러왔습니다.`);
+            });
+
+            deleteSiteProfileBtn?.addEventListener('click', () => {
+                const id = siteProfileSelect?.value;
+                if (!id) {
+                    showToast('삭제할 프로필을 선택해 주세요.');
+                    return;
+                }
+                const profile = siteProfiles.find(p => p.id === id);
+                if (!profile) return;
+                if (!confirm(`[${profile.name}] 현장 프로필을 삭제하시겠습니까?`)) return;
+
+                siteProfiles = siteProfiles.filter(p => p.id !== id);
+                persistSiteProfiles();
+                renderSiteProfileOptions();
+                showToast(`[${profile.name}] 프로필이 삭제되었습니다.`);
+            });
+
+            loadSiteProfiles();
+            renderSiteProfileOptions();
+
+            // Archive GitHub Backup / Restore (전체 보관함을 하나의 JSON으로 백업)
+            const archiveGithubBackupBtn = document.getElementById('archiveGithubBackupBtn');
+            const archiveGithubRestoreBtn = document.getElementById('archiveGithubRestoreBtn');
+            const ARCHIVE_GITHUB_FILE = 'backups/공문서프로그램/archive_backup.json';
+
+            archiveGithubBackupBtn?.addEventListener('click', async () => {
+                if (!getGithubToken()) {
+                    showToast('먼저 GitHub 탭에서 토큰을 저장해 주세요.');
+                    return;
+                }
+                if (archiveEntries.length === 0) {
+                    showToast('백업할 보관함 항목이 없습니다.');
+                    return;
+                }
+                archiveGithubBackupBtn.disabled = true;
+                archiveGithubBackupBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 백업 중...';
+                try {
+                    const content = JSON.stringify(archiveEntries, null, 2);
+                    let sha;
+                    try {
+                        const existing = await githubApiRequest(`/contents/${encodeURI(ARCHIVE_GITHUB_FILE)}`);
+                        sha = existing.sha;
+                    } catch (e) { /* 파일이 없으면 신규 생성 */ }
+
+                    await githubApiRequest(`/contents/${encodeURI(ARCHIVE_GITHUB_FILE)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            message: `지난 공문 보관함 백업 (${archiveEntries.length}건, ${new Date().toLocaleString('ko-KR')})`,
+                            content: utf8ToBase64(content),
+                            ...(sha ? { sha } : {})
+                        })
+                    });
+                    showToast(`GitHub에 보관함 전체(${archiveEntries.length}건)를 백업했습니다.`);
+                } catch (err) {
+                    console.error(err);
+                    alert(`보관함 백업 실패: ${err.message}\n(파일 용량이 클 경우 GitHub API 제한(약 25MB)에 걸릴 수 있습니다.)`);
+                } finally {
+                    archiveGithubBackupBtn.disabled = false;
+                    archiveGithubBackupBtn.innerHTML = '<i class="fa-brands fa-github"></i> GitHub에 보관함 백업';
+                }
+            });
+
+            archiveGithubRestoreBtn?.addEventListener('click', async () => {
+                if (!getGithubToken()) {
+                    showToast('먼저 GitHub 탭에서 토큰을 저장해 주세요.');
+                    return;
+                }
+                if (!confirm('GitHub의 백업으로 현재 보관함을 덮어씁니다. 계속하시겠습니까?')) return;
+
+                archiveGithubRestoreBtn.disabled = true;
+                archiveGithubRestoreBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 불러오는 중...';
+                try {
+                    const fileData = await githubApiRequest(`/contents/${encodeURI(ARCHIVE_GITHUB_FILE)}`);
+                    const jsonStr = base64ToUtf8(fileData.content.replace(/\n/g, ''));
+                    const restored = JSON.parse(jsonStr);
+                    if (!Array.isArray(restored)) throw new Error('백업 파일 형식이 올바르지 않습니다.');
+                    archiveEntries = restored;
+                    persistArchiveEntries();
+                    renderArchiveList();
+                    showToast(`GitHub 백업에서 보관함(${restored.length}건)을 복원했습니다.`);
+                } catch (err) {
+                    console.error(err);
+                    if (String(err.message).includes('404')) {
+                        alert('GitHub에 저장된 보관함 백업이 아직 없습니다.');
+                    } else {
+                        alert(`복원 실패: ${err.message}`);
+                    }
+                } finally {
+                    archiveGithubRestoreBtn.disabled = false;
+                    archiveGithubRestoreBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> GitHub에서 복원';
+                }
+            });
+
+            // Full Backup: Current Document + Calendar + Archive (하나의 파일로 통합 백업)
+            const backupAllToGithubBtn = document.getElementById('backupAllToGithubBtn');
+            const GITHUB_FULL_BACKUP_FILE_PREFIX = 'full_backup';
+
+            backupAllToGithubBtn?.addEventListener('click', async () => {
+                if (!getGithubToken()) {
+                    showToast('먼저 GitHub 토큰을 저장해 주세요.');
+                    return;
+                }
+                backupAllToGithubBtn.disabled = true;
+                backupAllToGithubBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 전체 백업 중...';
+                try {
+                    const now = new Date();
+                    const pad = n => String(n).padStart(2, '0');
+                    const timestamp = `${now.getFullYear()}${pad(now.getMonth() + 1)}${pad(now.getDate())}_${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+                    const fullBackup = {
+                        exportedAt: now.toISOString(),
+                        currentDocument: state,
+                        archive: archiveEntries
+                    };
+                    const content = JSON.stringify(fullBackup, null, 2);
+                    const filePath = `${getGithubBackupDir()}/${GITHUB_FULL_BACKUP_FILE_PREFIX}_${timestamp}.json`;
+
+                    await githubApiRequest(`/contents/${encodeURI(filePath)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            message: `전체 백업 (문서+달력+보관함 ${archiveEntries.length}건, ${now.toLocaleString('ko-KR')})`,
+                            content: utf8ToBase64(content)
+                        })
+                    });
+                    showToast(`전체 백업 완료: ${filePath}`);
+                    await loadGithubBackupList();
+                } catch (err) {
+                    console.error(err);
+                    alert(`전체 백업 실패: ${err.message}\n(보관함에 대용량 파일이 많으면 GitHub API 용량 제한에 걸릴 수 있습니다.)`);
+                } finally {
+                    backupAllToGithubBtn.disabled = false;
+                    backupAllToGithubBtn.innerHTML = '<i class="fa-solid fa-layer-group"></i> 전체 백업 (현재 문서 + 달력 + 지난 공문 보관함)';
+                }
+            });
+
             // Calendar Saved Docs Persistence (localStorage)
             function persistSavedDocs() {
                 try {
@@ -2847,8 +3685,68 @@
 
             exportEditableHtmlBtn?.addEventListener('click', () => exportHtmlDocument(false));
 
+            // Share Summary (카카오톡/메일용 요약 텍스트 생성 및 클립보드 복사)
+            document.getElementById('copyShareSummaryBtn')?.addEventListener('click', async () => {
+                const bodyPreview = (state.paragraphs || [])
+                    .map(p => (p.text || '').trim())
+                    .filter(Boolean)
+                    .slice(0, 3)
+                    .join('\n');
+
+                const summary = [
+                    `[${state.docNum || '문서번호 미기재'}]`,
+                    `${state.subject || '(제목 미기재)'}`,
+                    `수신: ${state.recipient || '(미기재)'} / 시행일자: ${state.docDate || '(미기재)'}`,
+                    '',
+                    bodyPreview || '(본문 내용 없음)'
+                ].join('\n');
+
+                try {
+                    await navigator.clipboard.writeText(summary);
+                    showToast('공유용 요약 텍스트가 클립보드에 복사되었습니다.');
+                } catch (e) {
+                    // Fallback for environments without clipboard API permission
+                    const textarea = document.createElement('textarea');
+                    textarea.value = summary;
+                    textarea.style.position = 'fixed';
+                    textarea.style.opacity = '0';
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    try {
+                        document.execCommand('copy');
+                        showToast('공유용 요약 텍스트가 클립보드에 복사되었습니다.');
+                    } catch (err) {
+                        alert('클립보드 복사에 실패했습니다. 브라우저 권한을 확인해 주세요.');
+                    }
+                    document.body.removeChild(textarea);
+                }
+            });
+
+            // Pre-Print/Send Checklist (필수 항목 누락 확인)
+            function runPreSendChecklist() {
+                const issues = [];
+                if (!state.recipient || !state.recipient.trim()) issues.push('수신자가 입력되지 않았습니다.');
+                if (!state.subject || !state.subject.trim() || state.subject === '문서 제목을 입력하세요') issues.push('문서 제목이 입력되지 않았습니다.');
+                if (!state.docNum || !state.docNum.trim()) issues.push('문서 번호가 입력되지 않았습니다.');
+                if (!state.docDate || !state.docDate.trim()) issues.push('시행 일자가 입력되지 않았습니다.');
+                if (!state.paragraphs || state.paragraphs.length === 0 || state.paragraphs.every(p => !p.text || !p.text.trim())) {
+                    issues.push('본문 내용이 비어 있습니다.');
+                }
+                if (!state.seal || !state.seal.visible) issues.push('전자 직인이 표시되지 않은 상태입니다. (필요 시 "결재란" 탭에서 확인)');
+                return issues;
+            }
+
             // Print / Save as PDF (browser print dialog -> "PDF로 저장" 선택)
             document.getElementById('printPdfBtn')?.addEventListener('click', () => {
+                const issues = runPreSendChecklist();
+                if (issues.length > 0) {
+                    const proceed = confirm(
+                        `발송 전 확인이 필요한 항목이 있습니다:\n\n` +
+                        issues.map((msg, i) => `${i + 1}. ${msg}`).join('\n') +
+                        `\n\n그래도 인쇄를 진행하시겠습니까?`
+                    );
+                    if (!proceed) return;
+                }
                 showToast('인쇄 대화상자가 열립니다. "PDF로 저장"을 선택하면 PDF 파일로 저장됩니다.');
                 setTimeout(() => window.print(), 300);
             });
@@ -3040,6 +3938,62 @@
             }
             updateRecipientHistory();
             updateSavedDocCountBadge();
+
+            // ==================== Desktop Keyboard Shortcuts (PC 환경 최적화) ====================
+            document.addEventListener('keydown', (e) => {
+                // Esc : 열려있는 모달 닫기 (Ctrl 여부와 무관하게 항상 동작)
+                if (e.key === 'Escape') {
+                    calendarModal?.classList.add('hidden');
+                    githubModal?.classList.add('hidden');
+                    archiveModal?.classList.add('hidden');
+                    return;
+                }
+
+                const isCtrlOrCmd = e.ctrlKey || e.metaKey;
+                if (!isCtrlOrCmd) return;
+
+                const key = e.key.toLowerCase();
+
+                // Ctrl/Cmd + S : 임시 저장
+                if (key === 's') {
+                    e.preventDefault();
+                    saveDraftBtn?.click();
+                    return;
+                }
+
+                // Ctrl/Cmd + P : 인쇄/PDF (체크리스트 포함 기존 로직 그대로 사용)
+                if (key === 'p') {
+                    e.preventDefault();
+                    document.getElementById('printPdfBtn')?.click();
+                    return;
+                }
+
+                // Ctrl/Cmd + B : 사이드바 접기/펴기
+                if (key === 'b') {
+                    e.preventDefault();
+                    toggleSidebarBtn?.click();
+                    return;
+                }
+
+                // Ctrl/Cmd + + / - : 문서 확대/축소
+                if (key === '=' || key === '+') {
+                    e.preventDefault();
+                    zoomInBtn?.click();
+                    return;
+                }
+                if (key === '-') {
+                    e.preventDefault();
+                    zoomOutBtn?.click();
+                    return;
+                }
+
+                // Ctrl/Cmd + K : 공문 달력 열기
+                if (key === 'k') {
+                    e.preventDefault();
+                    openCalendarBtn?.click();
+                    return;
+                }
+            });
 
             renderUI();
         });
