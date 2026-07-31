@@ -1159,9 +1159,9 @@
 
                     <!-- Sign-off Footer & Drag Seal Overlay & QR Verification -->
                     <footer class="mt-16 pt-6 pb-2 relative">
-                        <div class="flex items-center justify-center">
-                            <div class="relative flex items-center justify-center">
-                                <h3 id="docSignerTitle" contenteditable="true" class="doc-size-signer font-extrabold tracking-wider text-slate-900 z-10 text-center px-6">
+                        <div class="flex items-center justify-center px-4">
+                            <div class="relative flex items-center justify-center max-w-full">
+                                <h3 id="docSignerTitle" contenteditable="true" class="doc-size-signer font-extrabold tracking-wider text-slate-900 z-10 text-center px-6" style="max-width: 100%; word-break: keep-all; overflow-wrap: break-word;">
                                     원주캠프롱 문화체육공원조성사업 현장 대리인 김종남
                                 </h3>
 
@@ -1545,6 +1545,11 @@
                     .replace(/&/g, '&amp;')
                     .replace(/</g, '&lt;')
                     .replace(/>/g, '&gt;');
+            }
+
+            // XSS 방지를 위해 이스케이프 후 공백을 &nbsp;로 치환 (문서 상단 회사명/주소 등 innerHTML 렌더링용)
+            function escapeHtmlWithNbsp(str) {
+                return escapeHtml(str).replace(/ /g, '&nbsp;');
             }
 
             function autosizeTextarea(el) {
@@ -1988,6 +1993,15 @@
                 });
             }
 
+            // Level-based color scheme for paragraph cards
+            const LEVEL_COLORS = {
+                0: { border: 'border-cyan-700/50', dot: 'bg-cyan-500', ring: 'focus-within:border-cyan-500' },
+                1: { border: 'border-orange-700/40', dot: 'bg-orange-500', ring: 'focus-within:border-orange-500' },
+                2: { border: 'border-emerald-700/40', dot: 'bg-emerald-500', ring: 'focus-within:border-emerald-500' },
+                3: { border: 'border-blue-700/40', dot: 'bg-blue-500', ring: 'focus-within:border-blue-500' },
+                4: { border: 'border-purple-700/40', dot: 'bg-purple-500', ring: 'focus-within:border-purple-500' }
+            };
+
             function renderParagraphs() {
                 if (!paragraphListContainer || !docBodyContainer) return;
                 
@@ -1995,23 +2009,25 @@
                 state.paragraphs.forEach((p, idx) => {
                     const text = typeof p === 'object' ? p.text : p;
                     const level = typeof p === 'object' ? (p.level ?? 1) : 1;
+                    const colors = LEVEL_COLORS[level] || LEVEL_COLORS[1];
                     
                     const div = document.createElement('div');
-                    div.className = 'flex items-start gap-1.5 bg-slate-900/80 p-1.5 rounded border border-slate-800';
+                    div.className = `flex items-start gap-2 bg-slate-900/80 p-2 rounded-lg border ${colors.border} ${colors.ring} transition-colors`;
                     div.innerHTML = `
-                        <select data-idx="${idx}" class="level-select bg-slate-950 text-slate-300 border border-slate-700 rounded px-1 py-1 text-[11px] mt-0.5">
+                        <span class="w-1.5 h-1.5 rounded-full ${colors.dot} shrink-0 mt-2.5" title="단계 색상 표시"></span>
+                        <select data-idx="${idx}" class="level-select bg-slate-950 text-slate-300 border border-slate-700 rounded px-1.5 py-1 text-[11px] mt-0.5 shrink-0">
                             <option value="1" ${level === 1 ? 'selected' : ''}>1. (1단계)</option>
                             <option value="2" ${level === 2 ? 'selected' : ''}>가. (2단계)</option>
                             <option value="3" ${level === 3 ? 'selected' : ''}>1) (3단계)</option>
                             <option value="4" ${level === 4 ? 'selected' : ''}>가) (4단계)</option>
                             <option value="0" ${level === 0 ? 'selected' : ''}>- 다 음 - (구분선)</option>
                         </select>
-                        <textarea data-idx="${idx}" rows="1" class="sidebar-p-input flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs outline-none resize-none overflow-hidden leading-snug" style="box-sizing: border-box; min-height: 28px;">${escapeHtml(text)}</textarea>
-                        <div class="flex flex-col mt-0.5">
+                        <textarea data-idx="${idx}" rows="1" class="sidebar-p-input flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1.5 text-slate-200 text-xs outline-none resize-none overflow-hidden leading-snug" style="box-sizing: border-box; min-height: 30px;" placeholder="내용을 입력하고 Enter를 누르면 다음 단락이 추가됩니다">${escapeHtml(text)}</textarea>
+                        <div class="flex flex-col shrink-0 mt-0.5">
                             <button type="button" data-idx="${idx}" class="move-p-up-btn text-slate-500 hover:text-amber-400 leading-none px-1 ${idx === 0 ? 'opacity-30 pointer-events-none' : ''}" title="위로 이동"><i class="fa-solid fa-caret-up"></i></button>
                             <button type="button" data-idx="${idx}" class="move-p-down-btn text-slate-500 hover:text-amber-400 leading-none px-1 ${idx === state.paragraphs.length - 1 ? 'opacity-30 pointer-events-none' : ''}" title="아래로 이동"><i class="fa-solid fa-caret-down"></i></button>
                         </div>
-                        <button type="button" data-idx="${idx}" class="delete-p-btn text-slate-500 hover:text-red-400 p-1 mt-0.5"><i class="fa-solid fa-xmark"></i></button>
+                        <button type="button" data-idx="${idx}" class="delete-p-btn text-slate-500 hover:text-red-400 p-1 mt-0.5 shrink-0" title="삭제"><i class="fa-solid fa-xmark"></i></button>
                     `;
                     paragraphListContainer.appendChild(div);
                 });
@@ -2029,7 +2045,7 @@
                     if (isDaeumLine) {
                         pEl.className = 'text-center';
                         pEl.style.letterSpacing = '0.3em';
-                        pEl.innerHTML = `<span data-idx="${idx}" contenteditable="true" class="doc-paragraph-p outline-none text-slate-900 focus:bg-amber-50 rounded px-0.5">${text}</span>`;
+                        pEl.innerHTML = `<span data-idx="${idx}" contenteditable="true" class="doc-paragraph-p outline-none text-slate-900 focus:bg-amber-50 rounded px-0.5">${escapeHtml(text)}</span>`;
                         docBodyContainer.appendChild(pEl);
                         return;
                     }
@@ -2040,7 +2056,7 @@
                     pEl.className = `flex items-start ${indentClass} leading-relaxed`;
                     pEl.innerHTML = `
                         <span class="font-bold shrink-0 min-w-[20px] text-slate-900">${label}</span>
-                        <span data-idx="${idx}" contenteditable="true" class="doc-paragraph-p flex-1 outline-none text-slate-900 focus:bg-amber-50 rounded px-0.5">${text}</span>
+                        <span data-idx="${idx}" contenteditable="true" class="doc-paragraph-p flex-1 outline-none text-slate-900 focus:bg-amber-50 rounded px-0.5">${escapeHtml(text)}</span>
                     `;
                     docBodyContainer.appendChild(pEl);
                 });
@@ -2072,7 +2088,7 @@
                     div.className = 'flex items-center gap-1.5 bg-slate-900/80 p-1.5 rounded border border-slate-800';
                     div.innerHTML = `
                         <span class="text-slate-400 font-mono text-[11px] font-bold w-4">${idx + 1}.</span>
-                        <input type="text" data-idx="${idx}" value="${att}" class="sidebar-a-input flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs outline-none">
+                        <input type="text" data-idx="${idx}" value="${escapeHtml(att)}" class="sidebar-a-input flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs outline-none">
                         <button type="button" data-idx="${idx}" class="delete-a-btn text-slate-500 hover:text-red-400 p-1"><i class="fa-solid fa-xmark"></i></button>
                     `;
                     attachmentListContainer.appendChild(div);
@@ -2084,7 +2100,7 @@
                     pEl.className = 'flex items-start';
                     const numPrefix = state.attachments.length > 1 ? `${idx + 1}. ` : '';
                     pEl.innerHTML = `
-                        <span data-idx="${idx}" contenteditable="true" class="doc-attachment-p outline-none text-slate-900 focus:bg-amber-50 rounded px-0.5">${numPrefix}${att}</span>
+                        <span data-idx="${idx}" contenteditable="true" class="doc-attachment-p outline-none text-slate-900 focus:bg-amber-50 rounded px-0.5">${escapeHtml(numPrefix + att)}</span>
                     `;
                     docAttachmentContainer.appendChild(pEl);
                 });
@@ -2120,7 +2136,7 @@
                 if (sealImageStamp) sealImageStamp.classList.add('hidden');
                 sealStamp.classList.remove('hidden');
 
-                sealStampText.innerHTML = `${state.seal.line1}<br>${state.seal.line2}<br>${state.seal.line3}`;
+                sealStampText.innerHTML = `${escapeHtml(state.seal.line1)}<br>${escapeHtml(state.seal.line2)}<br>${escapeHtml(state.seal.line3)}`;
 
                 sealStamp.className = 'seal-stamp';
                 if (state.seal.shape === 'circle-double') {
@@ -2226,9 +2242,9 @@
                 if (inputSignerTitle) inputSignerTitle.value = state.signerTitle;
 
                 if (docSlogan) docSlogan.textContent = state.slogan;
-                if (docCompanyName) docCompanyName.innerHTML = state.companyName.replace(/ /g, '&nbsp;');
+                if (docCompanyName) docCompanyName.innerHTML = escapeHtmlWithNbsp(state.companyName);
                 if (docCompanyUrl) docCompanyUrl.textContent = state.companyUrl;
-                if (docAddressInfo) docAddressInfo.innerHTML = state.addressInfo.replace(/ /g, '&nbsp;');
+                if (docAddressInfo) docAddressInfo.innerHTML = escapeHtmlWithNbsp(state.addressInfo);
                 if (docNum) docNum.textContent = state.docNum;
                 if (docDate) docDate.textContent = state.docDate;
                 if (docRecipient) docRecipient.textContent = state.recipient;
@@ -2338,7 +2354,7 @@
             });
             inputCompanyName?.addEventListener('input', (e) => {
                 state.companyName = e.target.value;
-                if (docCompanyName) docCompanyName.innerHTML = state.companyName.replace(/ /g, '&nbsp;');
+                if (docCompanyName) docCompanyName.innerHTML = escapeHtmlWithNbsp(state.companyName);
                 autoFitPage();
             });
             inputCompanyUrl?.addEventListener('input', (e) => {
@@ -2348,7 +2364,7 @@
             });
             inputAddressInfo?.addEventListener('input', (e) => {
                 state.addressInfo = e.target.value;
-                if (docAddressInfo) docAddressInfo.innerHTML = state.addressInfo.replace(/ /g, '&nbsp;');
+                if (docAddressInfo) docAddressInfo.innerHTML = escapeHtmlWithNbsp(state.addressInfo);
                 autoFitPage();
             });
             inputDocNum?.addEventListener('input', (e) => {
@@ -2515,6 +2531,42 @@
                         renderParagraphs();
                     }
                 }
+            });
+
+            // Enter 키: 새 단락 추가 후 포커스 이동 (Shift+Enter는 줄바꿈 허용)
+            paragraphListContainer?.addEventListener('keydown', (e) => {
+                if (!e.target.classList.contains('sidebar-p-input')) return;
+                if (e.key !== 'Enter' || e.shiftKey) return;
+                // 한글 등 IME 조합 확정 중 발생하는 Enter는 무시 (조합 완료 후 별도 keydown이 다시 발생함)
+                if (e.isComposing || e.keyCode === 229) return;
+
+                e.preventDefault();
+                e.stopPropagation();
+
+                const textarea = e.target;
+                const idx = parseInt(textarea.getAttribute('data-idx'), 10);
+                if (isNaN(idx) || !state.paragraphs[idx]) return;
+
+                // 커서 위치 기준으로 텍스트를 앞/뒤로 분리 (커서 이후 내용은 새 단락으로 이동)
+                const cursorPos = textarea.selectionStart ?? textarea.value.length;
+                const fullText = textarea.value;
+                const beforeText = fullText.slice(0, cursorPos);
+                const afterText = fullText.slice(cursorPos);
+
+                const currentLevel = typeof state.paragraphs[idx] === 'object' ? (state.paragraphs[idx].level ?? 1) : 1;
+                const newLevel = currentLevel === 0 ? 1 : currentLevel; // 구분선 다음은 1단계로 이어짐
+
+                state.paragraphs[idx] = { text: beforeText, level: currentLevel };
+                state.paragraphs.splice(idx + 1, 0, { text: afterText, level: newLevel });
+                renderParagraphs();
+
+                requestAnimationFrame(() => {
+                    const nextInput = paragraphListContainer.querySelector(`.sidebar-p-input[data-idx="${idx + 1}"]`);
+                    if (nextInput) {
+                        nextInput.focus();
+                        nextInput.setSelectionRange(0, 0);
+                    }
+                });
             });
 
             paragraphListContainer?.addEventListener('click', (e) => {
