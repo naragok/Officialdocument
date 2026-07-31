@@ -244,17 +244,9 @@
 
         /* Wide Desktop Optimization (1600px+) */
         @media (min-width: 1600px) {
-            #sidebarPanel .w-80 {
-                width: 22rem; /* 사이드바 콘텐츠 패널을 살짝 넓게 */
-            }
             main.page-container {
                 padding-left: 3rem;
                 padding-right: 3rem;
-            }
-        }
-        @media (min-width: 1920px) {
-            #sidebarPanel .w-80 {
-                width: 24rem;
             }
         }
 
@@ -327,9 +319,9 @@
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col bg-slate-950 text-slate-100">
+<body class="h-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden">
 
-    <header class="no-print bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50 shadow-lg">
+    <header class="no-print bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50 shadow-lg shrink-0">
         <div class="max-w-[1600px] mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
             
             <!-- Left Brand Title -->
@@ -465,7 +457,7 @@
     <div class="flex-grow flex overflow-hidden relative">
         
         <!-- Left Collapsible Form Control Sidebar Panel -->
-        <aside id="sidebarPanel" class="no-print flex shrink-0 transition-all duration-300 z-30">
+        <aside id="sidebarPanel" class="no-print flex h-full shrink-0 transition-all duration-300 z-30">
 
             <!-- Icon Rail Navigation -->
             <nav class="w-[72px] bg-slate-950 border-r border-slate-800 flex flex-col items-stretch py-3 gap-1 shrink-0 overflow-y-auto">
@@ -500,7 +492,7 @@
             </nav>
 
             <!-- Content Panel -->
-            <div class="w-80 lg:w-96 bg-slate-900 border-r border-slate-800 flex flex-col">
+            <div class="w-[28rem] xl:w-[32rem] 2xl:w-[36rem] bg-slate-900 border-r border-slate-800 flex flex-col">
                 <div class="px-4 py-3 border-b border-slate-800 bg-slate-950/60">
                     <h2 id="sidebarPanelTitle" class="font-bold text-sm text-slate-100 flex items-center gap-2">
                         <i class="fa-solid fa-building text-orange-400"></i> 발신 기관정보
@@ -664,11 +656,18 @@
                             <h3 class="font-bold text-slate-200 text-xs flex items-center gap-1.5">
                                 <i class="fa-solid fa-paperclip text-amber-400"></i> 붙임 서류 목록
                             </h3>
-                            <button id="addAttachmentBtn" type="button" class="bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 text-[11px] px-2 py-0.5 rounded border border-amber-500/40 flex items-center gap-1">
+                            <label class="relative inline-flex items-center cursor-pointer" title="붙임 서류 삽입 여부">
+                                <input type="checkbox" id="toggleAttachmentCheckbox" class="sr-only peer" checked>
+                                <div class="w-8 h-4 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-amber-600"></div>
+                            </label>
+                        </div>
+                        <div id="attachmentEditorArea" class="space-y-3">
+                            <button id="addAttachmentBtn" type="button" class="w-full bg-amber-600/30 hover:bg-amber-600/50 text-amber-300 text-[11px] px-2 py-1.5 rounded border border-amber-500/40 flex items-center justify-center gap-1">
                                 <i class="fa-solid fa-plus"></i> 붙임 추가
                             </button>
+                            <div id="attachmentListContainer" class="space-y-2"></div>
                         </div>
-                        <div id="attachmentListContainer" class="space-y-2"></div>
+                        <p id="attachmentDisabledNotice" class="hidden text-[10px] text-slate-500 text-center py-1">붙임 서류 목록이 문서에서 숨겨져 있습니다. 위 스위치를 켜면 다시 표시됩니다.</p>
                     </div>
                 </div>
 
@@ -915,6 +914,32 @@
                             <i class="fa-solid fa-rotate-left text-orange-400"></i> 지정 규격(13pt / 28pt / 20pt) 복원
                         </button>
                     </div>
+
+                    <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/60 space-y-3.5">
+                        <h3 class="font-bold text-slate-200 text-xs flex items-center gap-1.5 border-b border-slate-700/60 pb-2">
+                            <i class="fa-solid fa-arrows-up-down text-cyan-400"></i> 본문 단락 간격 조절
+                        </h3>
+
+                        <div>
+                            <div class="flex justify-between text-slate-400 mb-1">
+                                <span>단락 사이 간격</span>
+                                <span id="paragraphGapVal" class="text-cyan-400 font-mono font-bold">12 px</span>
+                            </div>
+                            <input type="range" id="paragraphGapRange" min="0" max="32" step="1" value="12" class="w-full accent-cyan-500 cursor-pointer">
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between text-slate-400 mb-1">
+                                <span>본문 전체 상하 여백</span>
+                                <span id="bodyBlockMarginVal" class="text-cyan-400 font-mono font-bold">32 px</span>
+                            </div>
+                            <input type="range" id="bodyBlockMarginRange" min="0" max="64" step="4" value="32" class="w-full accent-cyan-500 cursor-pointer">
+                        </div>
+
+                        <button id="resetParagraphGapBtn" type="button" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 rounded border border-slate-700 text-[11px] transition flex items-center justify-center gap-1">
+                            <i class="fa-solid fa-rotate-left text-cyan-400"></i> 기본 간격(12px / 32px) 복원
+                        </button>
+                    </div>
                 </div>
 
                 <!-- Tab: Font Style, Color & Logo Design -->
@@ -1093,7 +1118,7 @@
                         </section>
 
                         <!-- Main Body Paragraphs -->
-                        <section id="docBodyContainer" class="doc-size-body leading-relaxed text-slate-900 space-y-3 my-8 px-1"></section>
+                        <section id="docBodyContainer" class="doc-size-body leading-relaxed text-slate-900 px-1" style="margin-top: var(--body-block-margin, 32px); margin-bottom: var(--body-block-margin, 32px); display: flex; flex-direction: column; gap: var(--paragraph-gap, 12px);"></section>
 
                         <!-- Optional Embedded Data Table -->
                         <div id="docTableContainer" class="hidden my-4">
@@ -1434,6 +1459,7 @@
                 attachments: [
                     '2026년 08월 주말작업 계획서 1부.  끝.'
                 ],
+                attachmentsEnabled: true,
                 seal: {
                     visible: false,
                     mode: 'text', // 'text' | 'image'
@@ -1461,6 +1487,8 @@
                 fontSizeCompanyName: 28, 
                 fontSizeSignerTitle: 20, 
                 fontSizeAddress: 13,
+                paragraphGap: 12,
+                bodyBlockMargin: 32,
                 zoom: 1.0,
                 isEditMode: false,
                 savedDocs: []
@@ -1976,8 +2004,13 @@
                             <option value="2" ${level === 2 ? 'selected' : ''}>가. (2단계)</option>
                             <option value="3" ${level === 3 ? 'selected' : ''}>1) (3단계)</option>
                             <option value="4" ${level === 4 ? 'selected' : ''}>가) (4단계)</option>
+                            <option value="0" ${level === 0 ? 'selected' : ''}>- 다 음 - (구분선)</option>
                         </select>
                         <textarea data-idx="${idx}" rows="1" class="sidebar-p-input flex-1 bg-slate-950 border border-slate-700 rounded px-2 py-1 text-slate-200 text-xs outline-none resize-none overflow-hidden leading-snug" style="box-sizing: border-box; min-height: 28px;">${escapeHtml(text)}</textarea>
+                        <div class="flex flex-col mt-0.5">
+                            <button type="button" data-idx="${idx}" class="move-p-up-btn text-slate-500 hover:text-amber-400 leading-none px-1 ${idx === 0 ? 'opacity-30 pointer-events-none' : ''}" title="위로 이동"><i class="fa-solid fa-caret-up"></i></button>
+                            <button type="button" data-idx="${idx}" class="move-p-down-btn text-slate-500 hover:text-amber-400 leading-none px-1 ${idx === state.paragraphs.length - 1 ? 'opacity-30 pointer-events-none' : ''}" title="아래로 이동"><i class="fa-solid fa-caret-down"></i></button>
+                        </div>
                         <button type="button" data-idx="${idx}" class="delete-p-btn text-slate-500 hover:text-red-400 p-1 mt-0.5"><i class="fa-solid fa-xmark"></i></button>
                     `;
                     paragraphListContainer.appendChild(div);
@@ -1989,10 +2022,21 @@
                 state.paragraphs.forEach((p, idx) => {
                     const text = typeof p === 'object' ? p.text : p;
                     const level = typeof p === 'object' ? (p.level ?? 1) : 1;
+                    const isDaeumLine = level === 0 || /^-\s*다\s*음\s*-$/.test(text.replace(/\u00A0/g, ' ').trim());
+
+                    const pEl = document.createElement('div');
+
+                    if (isDaeumLine) {
+                        pEl.className = 'text-center';
+                        pEl.style.letterSpacing = '0.3em';
+                        pEl.innerHTML = `<span data-idx="${idx}" contenteditable="true" class="doc-paragraph-p outline-none text-slate-900 focus:bg-amber-50 rounded px-0.5">${text}</span>`;
+                        docBodyContainer.appendChild(pEl);
+                        return;
+                    }
+
                     const label = getParagraphLabel(idx, state.paragraphs);
                     const indentClass = level === 1 ? 'pl-0' : level === 2 ? 'pl-4' : level === 3 ? 'pl-8' : 'pl-12';
-                    
-                    const pEl = document.createElement('div');
+
                     pEl.className = `flex items-start ${indentClass} leading-relaxed`;
                     pEl.innerHTML = `
                         <span class="font-bold shrink-0 min-w-[20px] text-slate-900">${label}</span>
@@ -2006,7 +2050,22 @@
 
             function renderAttachments() {
                 if (!attachmentListContainer || !docAttachmentContainer) return;
-                
+
+                const docAttachmentSection = document.getElementById('docAttachmentSection');
+                const attachmentEditorArea = document.getElementById('attachmentEditorArea');
+                const attachmentDisabledNotice = document.getElementById('attachmentDisabledNotice');
+                const toggleAttachmentCheckbox = document.getElementById('toggleAttachmentCheckbox');
+
+                if (toggleAttachmentCheckbox) toggleAttachmentCheckbox.checked = state.attachmentsEnabled;
+                if (docAttachmentSection) docAttachmentSection.classList.toggle('hidden', !state.attachmentsEnabled);
+                if (attachmentEditorArea) attachmentEditorArea.classList.toggle('hidden', !state.attachmentsEnabled);
+                if (attachmentDisabledNotice) attachmentDisabledNotice.classList.toggle('hidden', state.attachmentsEnabled);
+
+                if (!state.attachmentsEnabled) {
+                    requestAnimationFrame(autoFitPage);
+                    return;
+                }
+
                 attachmentListContainer.innerHTML = '';
                 state.attachments.forEach((att, idx) => {
                     const div = document.createElement('div');
@@ -2094,6 +2153,25 @@
                 if (fontSizeBodyRange) fontSizeBodyRange.value = state.fontSizeBody;
                 if (fontSizeCompanyNameRange) fontSizeCompanyNameRange.value = state.fontSizeCompanyName;
                 if (fontSizeSignerTitleRange) fontSizeSignerTitleRange.value = state.fontSizeSignerTitle;
+            }
+
+            // Paragraph Spacing (본문 간격 조정)
+            function applyParagraphSpacing() {
+                if (!documentCanvas) return;
+                documentCanvas.style.setProperty('--paragraph-gap', `${state.paragraphGap}px`);
+                documentCanvas.style.setProperty('--body-block-margin', `${state.bodyBlockMargin}px`);
+
+                const paragraphGapVal = document.getElementById('paragraphGapVal');
+                const bodyBlockMarginVal = document.getElementById('bodyBlockMarginVal');
+                const paragraphGapRange = document.getElementById('paragraphGapRange');
+                const bodyBlockMarginRange = document.getElementById('bodyBlockMarginRange');
+
+                if (paragraphGapVal) paragraphGapVal.textContent = `${state.paragraphGap} px`;
+                if (bodyBlockMarginVal) bodyBlockMarginVal.textContent = `${state.bodyBlockMargin} px`;
+                if (paragraphGapRange) paragraphGapRange.value = state.paragraphGap;
+                if (bodyBlockMarginRange) bodyBlockMarginRange.value = state.bodyBlockMargin;
+
+                requestAnimationFrame(autoFitPage);
             }
 
             // A4 1-page auto-fit logic adjusted for custom print margins
@@ -2201,6 +2279,7 @@
 
                 applyPrintMargins();
                 applyFontSizes();
+                applyParagraphSpacing();
                 renderParagraphs();
                 renderAttachments();
                 updateSealVisuals();
@@ -2233,6 +2312,22 @@
                 applyFontSizes();
                 autoFitPage();
                 showToast('글꼴 크기가 기본 규격(본문 13pt / 기관명 28pt / 결문직함 20pt)으로 복원되었습니다.');
+            });
+
+            // Paragraph Spacing Event Listeners
+            document.getElementById('paragraphGapRange')?.addEventListener('input', (e) => {
+                state.paragraphGap = parseInt(e.target.value, 10);
+                applyParagraphSpacing();
+            });
+            document.getElementById('bodyBlockMarginRange')?.addEventListener('input', (e) => {
+                state.bodyBlockMargin = parseInt(e.target.value, 10);
+                applyParagraphSpacing();
+            });
+            document.getElementById('resetParagraphGapBtn')?.addEventListener('click', () => {
+                state.paragraphGap = 12;
+                state.bodyBlockMargin = 32;
+                applyParagraphSpacing();
+                showToast('본문 간격이 기본값(12px / 32px)으로 복원되었습니다.');
             });
 
             // Metadata Field Input Handlers
@@ -2376,7 +2471,8 @@
                 '관련하여 협조하여 주시기 바랍니다.',
                 '상기 내용에 대하여 검토 후 회신하여 주시기 바랍니다.',
                 '현장 안전관리에 만전을 기하여 주시기 바랍니다.',
-                '기한 내 제출하여 주시기 바라며, 문의사항은 담당자에게 연락 바랍니다.'
+                '기한 내 제출하여 주시기 바라며, 문의사항은 담당자에게 연락 바랍니다.',
+                '-\u00A0\u00A0다\u00A0\u00A0\u00A0\u00A0음\u00A0\u00A0-'
             ];
             const phraseChipContainer = document.getElementById('phraseChipContainer');
             if (phraseChipContainer) {
@@ -2386,7 +2482,9 @@
                 phraseChipContainer.addEventListener('click', (e) => {
                     const btn = e.target.closest('.phrase-chip-btn');
                     if (btn) {
-                        state.paragraphs.push({ text: btn.getAttribute('data-phrase'), level: 1 });
+                        const phrase = btn.getAttribute('data-phrase');
+                        const isDaeum = /^-\s*다\s*음\s*-$/.test(phrase.replace(/\u00A0/g, ' ').trim());
+                        state.paragraphs.push({ text: phrase, level: isDaeum ? 0 : 1 });
                         renderParagraphs();
                         showToast('상용구가 단락에 추가되었습니다.');
                     }
@@ -2427,10 +2525,38 @@
                         state.paragraphs.splice(idx, 1);
                         renderParagraphs();
                     }
+                    return;
+                }
+
+                const upBtn = e.target.closest('.move-p-up-btn');
+                if (upBtn) {
+                    const idx = parseInt(upBtn.getAttribute('data-idx'), 10);
+                    if (!isNaN(idx) && idx > 0) {
+                        const arr = state.paragraphs;
+                        [arr[idx - 1], arr[idx]] = [arr[idx], arr[idx - 1]];
+                        renderParagraphs();
+                    }
+                    return;
+                }
+
+                const downBtn = e.target.closest('.move-p-down-btn');
+                if (downBtn) {
+                    const idx = parseInt(downBtn.getAttribute('data-idx'), 10);
+                    if (!isNaN(idx) && idx < state.paragraphs.length - 1) {
+                        const arr = state.paragraphs;
+                        [arr[idx], arr[idx + 1]] = [arr[idx + 1], arr[idx]];
+                        renderParagraphs();
+                    }
                 }
             });
 
             // Attachments operations
+            document.getElementById('toggleAttachmentCheckbox')?.addEventListener('change', (e) => {
+                state.attachmentsEnabled = e.target.checked;
+                renderAttachments();
+                showToast(state.attachmentsEnabled ? '붙임 서류 목록을 문서에 표시합니다.' : '붙임 서류 목록을 문서에서 숨겼습니다.');
+            });
+
             document.getElementById('addAttachmentBtn')?.addEventListener('click', () => {
                 state.attachments.push('추가 첨부서류 1부.  끝.');
                 renderAttachments();
@@ -2833,7 +2959,8 @@
             // Toggle Sidebar
             toggleSidebarBtn?.addEventListener('click', () => {
                 sidebarPanel?.classList.toggle('-ml-80');
-                sidebarPanel?.classList.toggle('lg:-ml-96');
+                sidebarPanel?.classList.toggle('lg:-ml-[34rem]');
+                sidebarPanel?.classList.toggle('2xl:-ml-[38rem]');
             });
 
             // Direct Edit Mode Toggle
