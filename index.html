@@ -322,7 +322,7 @@
 <body class="h-screen flex flex-col bg-slate-950 text-slate-100 overflow-hidden">
 
     <header class="no-print bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50 shadow-lg shrink-0">
-        <div class="max-w-[1600px] mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+        <div class="w-full px-4 lg:px-6 py-2.5 flex flex-wrap items-center justify-between gap-3">
             
             <!-- Left Brand Title -->
             <div class="flex items-center space-x-3">
@@ -2983,6 +2983,27 @@
                 if (zoomLevelDisplay) zoomLevelDisplay.textContent = `${Math.round(state.zoom * 100)}%`;
             }
 
+            // PC 큰 화면 최적화: 뷰포트 높이에 맞춰 문서를 자동으로 크게 표시
+            function autoZoomToFitViewport() {
+                const mainEl = document.querySelector('main.page-container');
+                if (!mainEl || !documentCanvas) return;
+
+                const availableHeight = mainEl.clientHeight - 64; // 상하 여유 패딩 확보
+                const availableWidth = mainEl.clientWidth - 64;
+                const pageHeightPx = documentCanvas.offsetHeight || (297 * MM_TO_PX);
+                const pageWidthPx = documentCanvas.offsetWidth || (210 * MM_TO_PX);
+
+                if (availableHeight <= 0 || pageHeightPx <= 0) return;
+
+                const scaleByHeight = availableHeight / pageHeightPx;
+                const scaleByWidth = availableWidth / pageWidthPx;
+                let autoScale = Math.min(scaleByHeight, scaleByWidth);
+                autoScale = Math.max(0.6, Math.min(1.6, autoScale));
+
+                state.zoom = Math.round(autoScale * 100) / 100;
+                updateZoomDisplay();
+            }
+
             zoomOutBtn?.addEventListener('click', () => {
                 state.zoom = Math.max(0.5, state.zoom - 0.1);
                 updateZoomDisplay();
@@ -4189,6 +4210,20 @@
             });
 
             renderUI();
+
+            // 넓은 PC 화면(1600px 이상)에서 초기 로드 시 문서를 화면에 맞게 자동 확대
+            if (window.innerWidth >= 1600) {
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(autoZoomToFitViewport);
+                });
+            }
+
+            let resizeZoomTimer = null;
+            window.addEventListener('resize', () => {
+                if (window.innerWidth < 1600) return;
+                clearTimeout(resizeZoomTimer);
+                resizeZoomTimer = setTimeout(autoZoomToFitViewport, 250);
+            });
         });
     </script>
 </body>
