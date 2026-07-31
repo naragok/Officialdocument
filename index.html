@@ -3903,15 +3903,19 @@
                     calendarDaysGrid.appendChild(emptyDiv);
                 }
 
+                const now = new Date();
+                const isCurrentMonth = now.getFullYear() === year && now.getMonth() === month;
+
                 for (let day = 1; day <= lastDate; day++) {
                     const dateStr = `${year}. ${String(month + 1).padStart(2, '0')}. ${String(day).padStart(2, '0')}.`;
                     const hasDoc = state.savedDocs.some(d => d.date === dateStr);
+                    const isToday = isCurrentMonth && now.getDate() === day;
 
                     const dayBtn = document.createElement('button');
                     dayBtn.type = 'button';
                     dayBtn.className = `p-2 rounded-lg text-center hover:bg-slate-800 transition flex flex-col items-center justify-center relative ${
                         hasDoc ? 'bg-amber-500/10 text-amber-300 border border-amber-500/30' : 'text-slate-300'
-                    }`;
+                    } ${isToday ? 'ring-2 ring-cyan-400 ring-offset-1 ring-offset-slate-900' : ''}`;
                     dayBtn.innerHTML = `
                         <span class="font-mono text-xs font-semibold">${day}</span>
                         ${hasDoc ? '<span class="w-1.5 h-1.5 bg-amber-400 rounded-full mt-1"></span>' : ''}
@@ -4022,13 +4026,16 @@
             });
 
             openCalendarBtn?.addEventListener('click', () => {
-                const m = state.docDate.match(/(\d{4})\.\s*(\d{1,2})\.\s*(\d{1,2})/);
-                if (m) {
-                    calendarCurrentDate = new Date(parseInt(m[1], 10), parseInt(m[2], 10) - 1, 1);
-                }
+                const today = new Date();
+                calendarCurrentDate = new Date(today.getFullYear(), today.getMonth(), 1);
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                const todayDateStr = `${yyyy}. ${mm}. ${dd}.`;
+
                 if (calendarSearchInput) calendarSearchInput.value = '';
                 renderCalendar();
-                displayCalendarDocsForDate(state.docDate);
+                displayCalendarDocsForDate(todayDateStr);
                 calendarModal?.classList.remove('hidden');
             });
 
@@ -4051,6 +4058,13 @@
                     const parsed = JSON.parse(savedDraft);
                     Object.assign(state, parsed);
                 } catch (e) {}
+            } else {
+                // 새 문서 시작 시(임시저장 없음): 시행일자를 오늘 날짜로 자동 설정
+                const today = new Date();
+                const yyyy = today.getFullYear();
+                const mm = String(today.getMonth() + 1).padStart(2, '0');
+                const dd = String(today.getDate()).padStart(2, '0');
+                state.docDate = `${yyyy}. ${mm}. ${dd}.`;
             }
 
             // Load Saved Calendar Docs (persisted separately from draft)
