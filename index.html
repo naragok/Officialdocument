@@ -445,6 +445,12 @@
                     <span class="hidden sm:inline">요약 복사</span>
                 </button>
 
+                <!-- Pre-Send Checklist Toggle -->
+                <button id="toggleChecklistBtn" type="button" class="flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 px-3 py-1.5 rounded-lg border border-slate-700 transition" title="인쇄 전 필수항목 확인 켜기/끄기">
+                    <i class="fa-solid fa-clipboard-check text-slate-400"></i>
+                    <span class="hidden sm:inline">발송전 확인</span>
+                </button>
+
                 <!-- PDF/Print Button -->
                 <button id="printPdfBtn" type="button" class="flex items-center gap-1.5 bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-medium px-4 py-1.5 rounded-lg shadow-md transition" title="단축키: Ctrl+P">
                     <i class="fa-solid fa-print"></i>
@@ -459,7 +465,7 @@
         <!-- Left Collapsible Form Control Sidebar Panel -->
         <aside id="sidebarPanel" class="no-print flex h-full shrink-0 transition-all duration-300 z-30">
 
-            <!-- Icon Rail Navigation -->
+            <!-- Icon Rail Navigation (always fixed) -->
             <nav class="w-[72px] bg-slate-950 border-r border-slate-800 flex flex-col items-stretch py-3 gap-1 shrink-0 overflow-y-auto">
                 <button data-tab="org" class="tab-btn group flex flex-col items-center justify-center gap-1 py-3 mx-1.5 rounded-xl text-orange-400 bg-orange-500/15 border border-orange-500/30 transition" title="발신 기관정보">
                     <i class="fa-solid fa-building text-base"></i>
@@ -490,13 +496,18 @@
                     <span class="text-[10px] font-medium leading-none">디자인</span>
                 </button>
             </nav>
+        </aside>
 
-            <!-- Content Panel -->
-            <div class="w-[28rem] xl:w-[32rem] 2xl:w-[36rem] bg-slate-900 border-r border-slate-800 flex flex-col">
-                <div class="px-4 py-3 border-b border-slate-800 bg-slate-950/60">
+        <!-- Floating Content Panel (문서 위에 떠다니는 카드형 패널) -->
+        <div id="floatingPanelBackdrop" class="no-print fixed inset-0 bg-slate-950/40 z-40 hidden"></div>
+        <div id="floatingPanel" class="no-print fixed top-[76px] left-[88px] w-[26rem] xl:w-[30rem] bg-slate-900 border border-slate-700 rounded-2xl shadow-2xl flex flex-col z-50 hidden" style="max-height: calc(100vh - 96px);">
+                <div class="px-4 py-3 border-b border-slate-800 bg-slate-950/60 rounded-t-2xl flex items-center justify-between">
                     <h2 id="sidebarPanelTitle" class="font-bold text-sm text-slate-100 flex items-center gap-2">
                         <i class="fa-solid fa-building text-orange-400"></i> 발신 기관정보
                     </h2>
+                    <button id="closeFloatingPanelBtn" type="button" class="text-slate-400 hover:text-white p-1 rounded-lg transition">
+                        <i class="fa-solid fa-xmark"></i>
+                    </button>
                 </div>
                 <div class="flex-grow overflow-y-auto p-4 space-y-5 text-xs">
                 
@@ -521,13 +532,29 @@
                                 <i class="fa-solid fa-trash-can"></i>
                             </button>
                         </div>
+                        <div class="flex gap-2">
+                            <button id="updateSiteProfileBtn" type="button" class="flex-1 bg-slate-800 hover:bg-slate-700 text-cyan-300 py-1.5 rounded text-[11px] transition flex items-center justify-center gap-1 border border-slate-700" title="선택된 프로필을 현재 입력값으로 덮어쓰기">
+                                <i class="fa-solid fa-rotate"></i> 선택 프로필 현재값으로 업데이트
+                            </button>
+                            <button id="renameSiteProfileBtn" type="button" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded text-[11px] transition border border-slate-700" title="선택 프로필 이름 변경">
+                                <i class="fa-solid fa-pen"></i>
+                            </button>
+                        </div>
                         <div class="flex gap-2 pt-1 border-t border-slate-700/60">
                             <input type="text" id="newSiteProfileNameInput" placeholder="새 프로필 이름 (예: 원주 캠프롱 현장)" class="flex-1 bg-slate-900 border border-slate-700 rounded px-2.5 py-1.5 text-slate-200 focus:border-purple-500 outline-none text-[11px]">
                             <button id="saveSiteProfileBtn" type="button" class="bg-teal-600 hover:bg-teal-500 text-white px-3 py-1.5 rounded text-[11px] transition flex items-center gap-1 whitespace-nowrap">
                                 <i class="fa-solid fa-floppy-disk"></i> 현재값 저장
                             </button>
                         </div>
-                        <p class="text-[10px] text-slate-500">현재 입력된 기관정보(슬로건/회사명/URL/주소)와 발신명의인을 이름 붙여 저장합니다. 다른 현장에서도 드롭다운으로 불러와 재사용할 수 있습니다.</p>
+                        <div class="flex gap-2">
+                            <button id="profileGithubBackupBtn" type="button" class="flex-1 bg-slate-900 hover:bg-slate-800 text-purple-300 border border-purple-700/50 rounded py-1.5 text-[11px] transition flex items-center justify-center gap-1.5">
+                                <i class="fa-brands fa-github"></i> GitHub에 프로필 백업
+                            </button>
+                            <button id="profileGithubRestoreBtn" type="button" class="flex-1 bg-slate-900 hover:bg-slate-800 text-amber-300 border border-amber-700/50 rounded py-1.5 text-[11px] transition flex items-center justify-center gap-1.5">
+                                <i class="fa-solid fa-cloud-arrow-down"></i> GitHub에서 복원
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-slate-500">현재 입력된 기관정보(슬로건/회사명/URL/주소), 발신명의인, 수신/경유/참조를 이름 붙여 저장합니다. 새 문서 시작 시 마지막 사용 프로필이 자동 적용됩니다.</p>
                     </div>
 
                     <div class="bg-slate-800/60 p-3 rounded-lg border border-slate-700/60 space-y-3">
@@ -772,6 +799,13 @@
                                     <input type="range" id="sealImageRotateRange" min="-30" max="30" value="0" class="w-full accent-red-500">
                                 </div>
                             </div>
+                            <div>
+                                <div class="flex justify-between text-slate-400 mb-1">
+                                    <span>도장 투명도</span>
+                                    <span id="sealImageOpacityVal" class="text-red-400 font-mono font-bold">100%</span>
+                                </div>
+                                <input type="range" id="sealImageOpacityRange" min="20" max="100" step="5" value="100" class="w-full accent-red-500">
+                            </div>
                             <button id="removeSealImageBtn" type="button" class="w-full bg-slate-800 hover:bg-red-900/50 text-red-300 py-1.5 rounded border border-slate-700 text-[11px] transition flex items-center justify-center gap-1">
                                 <i class="fa-solid fa-trash-can"></i> 등록된 도장 이미지 제거
                             </button>
@@ -990,7 +1024,7 @@
             </div>
 
             <!-- Sidebar Footer Status -->
-            <div class="p-3 border-t border-slate-800 bg-slate-950 text-slate-400 text-[11px] flex items-center justify-between gap-2">
+            <div class="p-3 border-t border-slate-800 bg-slate-950 text-slate-400 text-[11px] flex items-center justify-between gap-2 rounded-b-2xl">
                 <button id="saveDraftBtn" type="button" class="bg-slate-800 hover:bg-slate-700 text-slate-200 px-2.5 py-1 rounded border border-slate-700 transition flex items-center gap-1" title="단축키: Ctrl+S">
                     <i class="fa-solid fa-floppy-disk text-orange-400"></i> 임시 저장
                 </button>
@@ -998,8 +1032,7 @@
                     <i class="fa-solid fa-trash-can"></i> 초기화
                 </button>
             </div>
-            </div>
-        </aside>
+        </div>
 
         <!-- Right Main Scrollable Viewport Document Canvas -->
         <main class="flex-grow page-container p-4 md:p-8 overflow-x-auto overflow-y-auto flex justify-center items-start bg-slate-950">
@@ -1470,7 +1503,8 @@
                     rotate: -5,
                     imageDataUrl: '',
                     imageSize: 80,
-                    imageRotate: 0
+                    imageRotate: 0,
+                    imageOpacity: 100
                 },
                 // Print Margin State Object
                 margin: {
@@ -2128,6 +2162,7 @@
                         sealImageStamp.style.width = `${state.seal.imageSize}px`;
                         sealImageStamp.style.height = `${state.seal.imageSize}px`;
                         sealImageStamp.style.transform = `rotate(${state.seal.imageRotate}deg)`;
+                        sealImageStamp.style.opacity = `${(state.seal.imageOpacity ?? 100) / 100}`;
                     }
                     return;
                 }
@@ -2291,6 +2326,10 @@
                 applySealModeUI();
                 if (sealImageSizeRange) sealImageSizeRange.value = state.seal.imageSize;
                 if (sealImageRotateRange) sealImageRotateRange.value = state.seal.imageRotate;
+                const sealImageOpacityRange = document.getElementById('sealImageOpacityRange');
+                const sealImageOpacityVal = document.getElementById('sealImageOpacityVal');
+                if (sealImageOpacityRange) sealImageOpacityRange.value = state.seal.imageOpacity ?? 100;
+                if (sealImageOpacityVal) sealImageOpacityVal.textContent = `${state.seal.imageOpacity ?? 100}%`;
                 updateSealImagePreview();
 
                 applyPrintMargins();
@@ -2447,30 +2486,65 @@
                 design: { label: '서체/로고 디자인', icon: 'fa-palette', color: 'text-amber-400' }
             };
             const sidebarPanelTitle = document.getElementById('sidebarPanelTitle');
+            const floatingPanel = document.getElementById('floatingPanel');
+            const floatingPanelBackdrop = document.getElementById('floatingPanelBackdrop');
+            const closeFloatingPanelBtn = document.getElementById('closeFloatingPanelBtn');
+            let currentOpenTab = null;
+
+            function openFloatingPanelTab(targetTab) {
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('text-orange-400', 'bg-orange-500/15', 'border-orange-500/30');
+                    b.classList.add('text-slate-400', 'border-transparent');
+                });
+                const activeBtn = document.querySelector(`.tab-btn[data-tab="${targetTab}"]`);
+                if (activeBtn) {
+                    activeBtn.classList.remove('text-slate-400', 'border-transparent');
+                    activeBtn.classList.add('text-orange-400', 'bg-orange-500/15', 'border-orange-500/30');
+                }
+
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
+                const activeContent = document.getElementById(`tab-${targetTab}`);
+                if (activeContent) activeContent.classList.remove('hidden');
+
+                const meta = tabMeta[targetTab];
+                if (sidebarPanelTitle && meta) {
+                    sidebarPanelTitle.innerHTML = `<i class="fa-solid ${meta.icon} ${meta.color}"></i> ${meta.label}`;
+                }
+
+                floatingPanel?.classList.remove('hidden');
+                floatingPanelBackdrop?.classList.remove('hidden');
+                currentOpenTab = targetTab;
+
+                if (targetTab === 'body') {
+                    requestAnimationFrame(autosizeAllParagraphTextareas);
+                }
+            }
+
+            function closeFloatingPanel() {
+                floatingPanel?.classList.add('hidden');
+                floatingPanelBackdrop?.classList.add('hidden');
+                document.querySelectorAll('.tab-btn').forEach(b => {
+                    b.classList.remove('text-orange-400', 'bg-orange-500/15', 'border-orange-500/30');
+                    b.classList.add('text-slate-400', 'border-transparent');
+                });
+                currentOpenTab = null;
+            }
 
             document.querySelectorAll('.tab-btn').forEach(btn => {
                 btn.addEventListener('click', () => {
                     const targetTab = btn.getAttribute('data-tab');
-                    document.querySelectorAll('.tab-btn').forEach(b => {
-                        b.classList.remove('text-orange-400', 'bg-orange-500/15', 'border-orange-500/30');
-                        b.classList.add('text-slate-400', 'border-transparent');
-                    });
-                    btn.classList.remove('text-slate-400', 'border-transparent');
-                    btn.classList.add('text-orange-400', 'bg-orange-500/15', 'border-orange-500/30');
-
-                    document.querySelectorAll('.tab-content').forEach(c => c.classList.add('hidden'));
-                    const activeContent = document.getElementById(`tab-${targetTab}`);
-                    if (activeContent) activeContent.classList.remove('hidden');
-
-                    const meta = tabMeta[targetTab];
-                    if (sidebarPanelTitle && meta) {
-                        sidebarPanelTitle.innerHTML = `<i class="fa-solid ${meta.icon} ${meta.color}"></i> ${meta.label}`;
-                    }
-
-                    if (targetTab === 'body') {
-                        requestAnimationFrame(autosizeAllParagraphTextareas);
+                    if (currentOpenTab === targetTab) {
+                        closeFloatingPanel();
+                    } else {
+                        openFloatingPanelTab(targetTab);
                     }
                 });
+            });
+
+            closeFloatingPanelBtn?.addEventListener('click', closeFloatingPanel);
+            floatingPanelBackdrop?.addEventListener('click', closeFloatingPanel);
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && currentOpenTab) closeFloatingPanel();
             });
 
             // Paragraph operations
@@ -2794,6 +2868,13 @@
                 updateSealVisuals();
             });
 
+            document.getElementById('sealImageOpacityRange')?.addEventListener('input', (e) => {
+                state.seal.imageOpacity = parseInt(e.target.value, 10);
+                const sealImageOpacityVal = document.getElementById('sealImageOpacityVal');
+                if (sealImageOpacityVal) sealImageOpacityVal.textContent = `${state.seal.imageOpacity}%`;
+                updateSealVisuals();
+            });
+
             removeSealImageBtn?.addEventListener('click', () => {
                 if (!state.seal.imageDataUrl) {
                     showToast('등록된 도장 이미지가 없습니다.');
@@ -3029,11 +3110,13 @@
                 updateZoomDisplay();
             }, { passive: false });
 
-            // Toggle Sidebar
+            // Toggle Sidebar (플로팅 패널 열기/닫기로 재활용)
             toggleSidebarBtn?.addEventListener('click', () => {
-                sidebarPanel?.classList.toggle('-ml-80');
-                sidebarPanel?.classList.toggle('lg:-ml-[34rem]');
-                sidebarPanel?.classList.toggle('2xl:-ml-[38rem]');
+                if (currentOpenTab) {
+                    closeFloatingPanel();
+                } else {
+                    openFloatingPanelTab('org');
+                }
             });
 
             // Direct Edit Mode Toggle
@@ -3561,6 +3644,10 @@
             const deleteSiteProfileBtn = document.getElementById('deleteSiteProfileBtn');
             const newSiteProfileNameInput = document.getElementById('newSiteProfileNameInput');
             const saveSiteProfileBtn = document.getElementById('saveSiteProfileBtn');
+            const updateSiteProfileBtn = document.getElementById('updateSiteProfileBtn');
+            const renameSiteProfileBtn = document.getElementById('renameSiteProfileBtn');
+            const profileGithubBackupBtn = document.getElementById('profileGithubBackupBtn');
+            const profileGithubRestoreBtn = document.getElementById('profileGithubRestoreBtn');
 
             let siteProfiles = [];
 
@@ -3608,7 +3695,10 @@
                     companyName: state.companyName || '',
                     companyUrl: state.companyUrl || '',
                     addressInfo: state.addressInfo || '',
-                    signerTitle: state.signerTitle || ''
+                    signerTitle: state.signerTitle || '',
+                    recipient: state.recipient || '',
+                    via: state.via || '',
+                    ref: state.ref || ''
                 };
 
                 if (duplicate) {
@@ -3629,14 +3719,11 @@
                 showToast(`[${name}] 현장 프로필이 저장되었습니다.`);
             });
 
-            applySiteProfileBtn?.addEventListener('click', () => {
-                const id = siteProfileSelect?.value;
-                if (!id) {
-                    showToast('불러올 프로필을 선택해 주세요.');
-                    return;
-                }
+            const LAST_USED_PROFILE_KEY = 'official_doc_last_used_profile_id';
+
+            function applySiteProfileById(id, options = {}) {
                 const profile = siteProfiles.find(p => p.id === id);
-                if (!profile) return;
+                if (!profile) return false;
 
                 const d = profile.data;
                 state.slogan = d.slogan || '';
@@ -3644,9 +3731,27 @@
                 state.companyUrl = d.companyUrl || '';
                 state.addressInfo = d.addressInfo || '';
                 state.signerTitle = d.signerTitle || '';
+                state.recipient = d.recipient || '';
+                state.via = d.via || '';
+                state.ref = d.ref || '';
 
                 renderUI();
-                showToast(`[${profile.name}] 현장 프로필을 불러왔습니다.`);
+                if (siteProfileSelect) siteProfileSelect.value = id;
+                localStorage.setItem(LAST_USED_PROFILE_KEY, id);
+
+                if (!options.silent) {
+                    showToast(`[${profile.name}] 현장 프로필을 불러왔습니다.`);
+                }
+                return true;
+            }
+
+            applySiteProfileBtn?.addEventListener('click', () => {
+                const id = siteProfileSelect?.value;
+                if (!id) {
+                    showToast('불러올 프로필을 선택해 주세요.');
+                    return;
+                }
+                applySiteProfileById(id);
             });
 
             deleteSiteProfileBtn?.addEventListener('click', () => {
@@ -3663,6 +3768,130 @@
                 persistSiteProfiles();
                 renderSiteProfileOptions();
                 showToast(`[${profile.name}] 프로필이 삭제되었습니다.`);
+            });
+
+            // 선택 프로필을 현재 입력값으로 덮어쓰기(업데이트)
+            updateSiteProfileBtn?.addEventListener('click', () => {
+                const id = siteProfileSelect?.value;
+                if (!id) {
+                    showToast('업데이트할 프로필을 선택해 주세요.');
+                    return;
+                }
+                const profile = siteProfiles.find(p => p.id === id);
+                if (!profile) return;
+                if (!confirm(`[${profile.name}] 프로필을 현재 입력값으로 덮어쓰시겠습니까?`)) return;
+
+                profile.data = {
+                    slogan: state.slogan || '',
+                    companyName: state.companyName || '',
+                    companyUrl: state.companyUrl || '',
+                    addressInfo: state.addressInfo || '',
+                    signerTitle: state.signerTitle || '',
+                    recipient: state.recipient || '',
+                    via: state.via || '',
+                    ref: state.ref || ''
+                };
+                profile.updatedAt = new Date().toISOString();
+                persistSiteProfiles();
+                showToast(`[${profile.name}] 프로필이 현재값으로 업데이트되었습니다.`);
+            });
+
+            // 선택 프로필 이름 변경
+            renameSiteProfileBtn?.addEventListener('click', () => {
+                const id = siteProfileSelect?.value;
+                if (!id) {
+                    showToast('이름을 변경할 프로필을 선택해 주세요.');
+                    return;
+                }
+                const profile = siteProfiles.find(p => p.id === id);
+                if (!profile) return;
+
+                const newName = prompt('새 프로필 이름을 입력하세요.', profile.name);
+                if (!newName || !newName.trim()) return;
+                const trimmedName = newName.trim();
+
+                if (siteProfiles.some(p => p.id !== id && p.name === trimmedName)) {
+                    alert('이미 같은 이름의 프로필이 있습니다.');
+                    return;
+                }
+
+                profile.name = trimmedName;
+                persistSiteProfiles();
+                renderSiteProfileOptions();
+                if (siteProfileSelect) siteProfileSelect.value = id;
+                showToast(`프로필 이름이 [${trimmedName}](으)로 변경되었습니다.`);
+            });
+
+            // 현장 프로필 GitHub 백업/복원 (전체 프로필 목록을 하나의 JSON으로)
+            const SITE_PROFILE_GITHUB_FILE = 'backups/공문서프로그램/site_profiles_backup.json';
+
+            profileGithubBackupBtn?.addEventListener('click', async () => {
+                if (!getGithubToken()) {
+                    showToast('먼저 GitHub 탭에서 토큰을 저장해 주세요.');
+                    return;
+                }
+                if (siteProfiles.length === 0) {
+                    showToast('백업할 현장 프로필이 없습니다.');
+                    return;
+                }
+                profileGithubBackupBtn.disabled = true;
+                profileGithubBackupBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 백업 중...';
+                try {
+                    const content = JSON.stringify(siteProfiles, null, 2);
+                    let sha;
+                    try {
+                        const existing = await githubApiRequest(`/contents/${encodeURI(SITE_PROFILE_GITHUB_FILE)}`);
+                        sha = existing.sha;
+                    } catch (e) { /* 파일 없으면 신규 생성 */ }
+
+                    await githubApiRequest(`/contents/${encodeURI(SITE_PROFILE_GITHUB_FILE)}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            message: `현장 프로필 백업 (${siteProfiles.length}건, ${new Date().toLocaleString('ko-KR')})`,
+                            content: utf8ToBase64(content),
+                            ...(sha ? { sha } : {})
+                        })
+                    });
+                    showToast(`GitHub에 현장 프로필(${siteProfiles.length}건)을 백업했습니다.`);
+                } catch (err) {
+                    console.error(err);
+                    alert(`프로필 백업 실패: ${err.message}`);
+                } finally {
+                    profileGithubBackupBtn.disabled = false;
+                    profileGithubBackupBtn.innerHTML = '<i class="fa-brands fa-github"></i> GitHub에 프로필 백업';
+                }
+            });
+
+            profileGithubRestoreBtn?.addEventListener('click', async () => {
+                if (!getGithubToken()) {
+                    showToast('먼저 GitHub 탭에서 토큰을 저장해 주세요.');
+                    return;
+                }
+                if (!confirm('GitHub의 백업으로 현재 저장된 현장 프로필 목록을 덮어씁니다. 계속하시겠습니까?')) return;
+
+                profileGithubRestoreBtn.disabled = true;
+                profileGithubRestoreBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> 불러오는 중...';
+                try {
+                    const fileData = await githubApiRequest(`/contents/${encodeURI(SITE_PROFILE_GITHUB_FILE)}`);
+                    const jsonStr = base64ToUtf8(fileData.content.replace(/\n/g, ''));
+                    const restored = JSON.parse(jsonStr);
+                    if (!Array.isArray(restored)) throw new Error('백업 파일 형식이 올바르지 않습니다.');
+                    siteProfiles = restored;
+                    persistSiteProfiles();
+                    renderSiteProfileOptions();
+                    showToast(`GitHub 백업에서 현장 프로필(${restored.length}건)을 복원했습니다.`);
+                } catch (err) {
+                    console.error(err);
+                    if (String(err.message).includes('404')) {
+                        alert('GitHub에 저장된 현장 프로필 백업이 아직 없습니다.');
+                    } else {
+                        alert(`복원 실패: ${err.message}`);
+                    }
+                } finally {
+                    profileGithubRestoreBtn.disabled = false;
+                    profileGithubRestoreBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-down"></i> GitHub에서 복원';
+                }
             });
 
             loadSiteProfiles();
@@ -3843,26 +4072,32 @@
                     cloneDoc.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
                 }
 
+                // 원본 페이지의 전체 스타일 블록(폰트체, 글꼴크기 변수, 단락간격, 결문/직인/QR 스타일 등)을 그대로 가져와
+                // 화면·인쇄와 동일하게 보이도록 함
+                const originalStyleTag = document.querySelector('head > style');
+                const originalStyleContent = originalStyleTag ? originalStyleTag.textContent : '';
+
                 const fullHtml = `<!DOCTYPE html>
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
     <title>${escapeHtml(state.subject)}</title>
     <script src="https://cdn.tailwindcss.com"><\/script>
-    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@400;700&family=Nanum+Gothic:wght@400;700;800&family=Nanum+Myeongjo:wght@400;700;800&family=Noto+Sans+KR:wght@300;400;500;700;900&family=Noto+Serif+KR:wght@400;500;600;700;900&family=Song+Myung&display=swap" rel="stylesheet">
     <style>
+${originalStyleContent}
+
+        /* Export Wrapper Styles */
         :root {
             --paper-margin-top: ${state.margin.top}mm;
             --paper-margin-right: ${state.margin.right}mm;
             --paper-margin-bottom: ${state.margin.bottom}mm;
             --paper-margin-left: ${state.margin.left}mm;
         }
-        body { background: #f1f5f9; display: flex; justify-content: center; padding: 20px; font-family: 'Noto Sans KR', sans-serif; }
-        .a4-page { width: 210mm; min-height: 297mm; background: #fff; padding: var(--paper-margin-top) var(--paper-margin-right) var(--paper-margin-bottom) var(--paper-margin-left); box-shadow: 0 10px 25px rgba(0,0,0,0.1); position: relative; box-sizing: border-box; color: #111827; }
-        .seal-stamp { width: 72px; height: 72px; border: 3.5px double #dc2626; border-radius: 50%; color: #dc2626; font-weight: 800; font-size: 12.5px; text-align: center; line-height: 1.15; transform: rotate(-5deg); display: inline-flex; align-items: center; justify-content: center; }
+        body { background: #f1f5f9; display: flex; justify-content: center; padding: 20px; }
         @media print {
             body { background: #fff; padding: 0; }
-            .a4-page { box-shadow: none; margin: 0; width: 210mm; height: 297mm; padding: var(--paper-margin-top) var(--paper-margin-right) var(--paper-margin-bottom) var(--paper-margin-left) !important; }
+            .a4-page { box-shadow: none; margin: 0; }
         }
     </style>
 </head>
@@ -3875,7 +4110,11 @@
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `${isReadOnly ? '읽기전용_' : '편집가능_'}${state.docNum.replace(/[^a-zA-Z0-9가-힣]/g, '_')}.html`;
+
+                const safeDocNum = (state.docNum || '문서번호미기재').replace(/[^a-zA-Z0-9가-힣]/g, '_').replace(/_+/g, '_');
+                const safeSubject = (state.subject || '제목미기재').replace(/[^a-zA-Z0-9가-힣]/g, '_').replace(/_+/g, '_');
+                const modeSuffix = isReadOnly ? '읽기전용' : '편집가능';
+                a.download = `${safeDocNum}-${safeSubject}_${modeSuffix}.html`;
                 document.body.appendChild(a);
                 a.click();
                 a.remove();
@@ -3922,7 +4161,34 @@
                 }
             });
 
-            // Pre-Print/Send Checklist (필수 항목 누락 확인)
+            // Pre-Print/Send Checklist (필수 항목 누락 확인) - 기본값 꺼짐, 헤더 토글로 켜고 끌 수 있음
+            const CHECKLIST_ENABLED_KEY = 'official_doc_checklist_enabled';
+            const toggleChecklistBtn = document.getElementById('toggleChecklistBtn');
+
+            function isChecklistEnabled() {
+                return localStorage.getItem(CHECKLIST_ENABLED_KEY) === 'true';
+            }
+
+            function applyChecklistToggleUI() {
+                const enabled = isChecklistEnabled();
+                if (toggleChecklistBtn) {
+                    toggleChecklistBtn.classList.toggle('bg-orange-600/30', enabled);
+                    toggleChecklistBtn.classList.toggle('border-orange-500/50', enabled);
+                    toggleChecklistBtn.classList.toggle('text-orange-300', enabled);
+                    const icon = toggleChecklistBtn.querySelector('i');
+                    if (icon) icon.className = enabled ? 'fa-solid fa-clipboard-check text-orange-400' : 'fa-solid fa-clipboard-check text-slate-400';
+                }
+            }
+
+            toggleChecklistBtn?.addEventListener('click', () => {
+                const next = !isChecklistEnabled();
+                localStorage.setItem(CHECKLIST_ENABLED_KEY, String(next));
+                applyChecklistToggleUI();
+                showToast(next ? '발송 전 필수항목 확인이 활성화되었습니다.' : '발송 전 필수항목 확인이 비활성화되었습니다.');
+            });
+
+            applyChecklistToggleUI();
+
             function runPreSendChecklist() {
                 const issues = [];
                 if (!state.recipient || !state.recipient.trim()) issues.push('수신자가 입력되지 않았습니다.');
@@ -3938,14 +4204,16 @@
 
             // Print / Save as PDF (browser print dialog -> "PDF로 저장" 선택)
             document.getElementById('printPdfBtn')?.addEventListener('click', () => {
-                const issues = runPreSendChecklist();
-                if (issues.length > 0) {
-                    const proceed = confirm(
-                        `발송 전 확인이 필요한 항목이 있습니다:\n\n` +
-                        issues.map((msg, i) => `${i + 1}. ${msg}`).join('\n') +
-                        `\n\n그래도 인쇄를 진행하시겠습니까?`
-                    );
-                    if (!proceed) return;
+                if (isChecklistEnabled()) {
+                    const issues = runPreSendChecklist();
+                    if (issues.length > 0) {
+                        const proceed = confirm(
+                            `발송 전 확인이 필요한 항목이 있습니다:\n\n` +
+                            issues.map((msg, i) => `${i + 1}. ${msg}`).join('\n') +
+                            `\n\n그래도 인쇄를 진행하시겠습니까?`
+                        );
+                        if (!proceed) return;
+                    }
                 }
                 showToast('인쇄 대화상자가 열립니다. "PDF로 저장"을 선택하면 PDF 파일로 저장됩니다.');
                 setTimeout(() => window.print(), 300);
@@ -4138,6 +4406,23 @@
                 const mm = String(today.getMonth() + 1).padStart(2, '0');
                 const dd = String(today.getDate()).padStart(2, '0');
                 state.docDate = `${yyyy}. ${mm}. ${dd}.`;
+
+                // 마지막으로 사용한 현장 프로필 자동 적용
+                const lastUsedProfileId = localStorage.getItem(LAST_USED_PROFILE_KEY);
+                if (lastUsedProfileId) {
+                    const lastProfile = siteProfiles.find(p => p.id === lastUsedProfileId);
+                    if (lastProfile) {
+                        const d = lastProfile.data;
+                        state.slogan = d.slogan || state.slogan;
+                        state.companyName = d.companyName || state.companyName;
+                        state.companyUrl = d.companyUrl || state.companyUrl;
+                        state.addressInfo = d.addressInfo || state.addressInfo;
+                        state.signerTitle = d.signerTitle || state.signerTitle;
+                        state.recipient = d.recipient || state.recipient;
+                        state.via = d.via || state.via;
+                        state.ref = d.ref || state.ref;
+                    }
+                }
             }
 
             // Load Saved Calendar Docs (persisted separately from draft)
@@ -4210,6 +4495,12 @@
             });
 
             renderUI();
+
+            // 프로필 드롭다운을 마지막 사용 프로필로 동기화 (자동 적용된 경우)
+            const lastUsedProfileIdForSelect = localStorage.getItem(LAST_USED_PROFILE_KEY);
+            if (lastUsedProfileIdForSelect && siteProfileSelect && siteProfiles.some(p => p.id === lastUsedProfileIdForSelect)) {
+                siteProfileSelect.value = lastUsedProfileIdForSelect;
+            }
 
             // 넓은 PC 화면(1600px 이상)에서 초기 로드 시 문서를 화면에 맞게 자동 확대
             if (window.innerWidth >= 1600) {
