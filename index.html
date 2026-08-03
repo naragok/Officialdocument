@@ -806,6 +806,15 @@
                                 </div>
                                 <input type="range" id="sealImageOpacityRange" min="20" max="100" step="5" value="100" class="w-full accent-red-500">
                             </div>
+                            <div class="flex items-center justify-between bg-slate-950/60 border border-slate-800 rounded-lg px-2.5 py-2">
+                                <span class="text-slate-300 flex items-center gap-1.5">
+                                    <i class="fa-solid fa-layer-group text-slate-500"></i> 도장을 글자 뒤로 보내기
+                                </span>
+                                <label class="relative inline-flex items-center cursor-pointer" title="도장 이미지를 결문 직함 텍스트 아래로 배치">
+                                    <input type="checkbox" id="sealImageSendBackCheckbox" class="sr-only peer">
+                                    <div class="w-8 h-4 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-red-600"></div>
+                                </label>
+                            </div>
                             <button id="removeSealImageBtn" type="button" class="w-full bg-slate-800 hover:bg-red-900/50 text-red-300 py-1.5 rounded border border-slate-700 text-[11px] transition flex items-center justify-center gap-1">
                                 <i class="fa-solid fa-trash-can"></i> 등록된 도장 이미지 제거
                             </button>
@@ -957,9 +966,9 @@
                         <div>
                             <div class="flex justify-between text-slate-400 mb-1">
                                 <span>단락 사이 간격</span>
-                                <span id="paragraphGapVal" class="text-cyan-400 font-mono font-bold">12 px</span>
+                                <span id="paragraphGapVal" class="text-cyan-400 font-mono font-bold">10 px</span>
                             </div>
-                            <input type="range" id="paragraphGapRange" min="0" max="32" step="1" value="12" class="w-full accent-cyan-500 cursor-pointer">
+                            <input type="range" id="paragraphGapRange" min="0" max="32" step="1" value="10" class="w-full accent-cyan-500 cursor-pointer">
                         </div>
 
                         <div>
@@ -971,7 +980,7 @@
                         </div>
 
                         <button id="resetParagraphGapBtn" type="button" class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-1.5 rounded border border-slate-700 text-[11px] transition flex items-center justify-center gap-1">
-                            <i class="fa-solid fa-rotate-left text-cyan-400"></i> 기본 간격(12px / 32px) 복원
+                            <i class="fa-solid fa-rotate-left text-cyan-400"></i> 기본 간격(10px / 32px) 복원
                         </button>
                     </div>
                 </div>
@@ -1504,7 +1513,8 @@
                     imageDataUrl: '',
                     imageSize: 80,
                     imageRotate: 0,
-                    imageOpacity: 100
+                    imageOpacity: 100,
+                    imageSendBack: false
                 },
                 // Print Margin State Object
                 margin: {
@@ -1521,7 +1531,7 @@
                 fontSizeCompanyName: 28, 
                 fontSizeSignerTitle: 20, 
                 fontSizeAddress: 13,
-                paragraphGap: 12,
+                paragraphGap: 10,
                 bodyBlockMargin: 32,
                 zoom: 1.0,
                 isEditMode: false,
@@ -2163,6 +2173,8 @@
                         sealImageStamp.style.height = `${state.seal.imageSize}px`;
                         sealImageStamp.style.transform = `rotate(${state.seal.imageRotate}deg)`;
                         sealImageStamp.style.opacity = `${(state.seal.imageOpacity ?? 100) / 100}`;
+                        // 도장을 결문 텍스트 뒤로 보내기: wrap의 기본 z-index(20)보다 낮춰서 텍스트(z-10) 밑에 깔리도록 함
+                        sealStampWrap.style.zIndex = state.seal.imageSendBack ? '5' : '20';
                     }
                     return;
                 }
@@ -2170,6 +2182,7 @@
                 // Text-Generated Seal Mode
                 if (sealImageStamp) sealImageStamp.classList.add('hidden');
                 sealStamp.classList.remove('hidden');
+                sealStampWrap.style.zIndex = '20';
 
                 sealStampText.innerHTML = `${escapeHtml(state.seal.line1)}<br>${escapeHtml(state.seal.line2)}<br>${escapeHtml(state.seal.line3)}`;
 
@@ -2330,6 +2343,8 @@
                 const sealImageOpacityVal = document.getElementById('sealImageOpacityVal');
                 if (sealImageOpacityRange) sealImageOpacityRange.value = state.seal.imageOpacity ?? 100;
                 if (sealImageOpacityVal) sealImageOpacityVal.textContent = `${state.seal.imageOpacity ?? 100}%`;
+                const sealImageSendBackCheckbox = document.getElementById('sealImageSendBackCheckbox');
+                if (sealImageSendBackCheckbox) sealImageSendBackCheckbox.checked = !!state.seal.imageSendBack;
                 updateSealImagePreview();
 
                 applyPrintMargins();
@@ -2379,10 +2394,10 @@
                 applyParagraphSpacing();
             });
             document.getElementById('resetParagraphGapBtn')?.addEventListener('click', () => {
-                state.paragraphGap = 12;
+                state.paragraphGap = 10;
                 state.bodyBlockMargin = 32;
                 applyParagraphSpacing();
-                showToast('본문 간격이 기본값(12px / 32px)으로 복원되었습니다.');
+                showToast('본문 간격이 기본값(10px / 32px)으로 복원되었습니다.');
             });
 
             // Metadata Field Input Handlers
@@ -2873,6 +2888,12 @@
                 const sealImageOpacityVal = document.getElementById('sealImageOpacityVal');
                 if (sealImageOpacityVal) sealImageOpacityVal.textContent = `${state.seal.imageOpacity}%`;
                 updateSealVisuals();
+            });
+
+            document.getElementById('sealImageSendBackCheckbox')?.addEventListener('change', (e) => {
+                state.seal.imageSendBack = e.target.checked;
+                updateSealVisuals();
+                showToast(state.seal.imageSendBack ? '도장이 결문 글자 뒤로 배치되었습니다.' : '도장이 글자 앞으로 배치되었습니다.');
             });
 
             removeSealImageBtn?.addEventListener('click', () => {
